@@ -95,7 +95,7 @@
             messagingSenderId: "190336015131",
             appId: "1:190336015131:web:e07c59b73b1119001bd1be"
         };
-        const app = firebase.initializeApp(firebaseConfig);
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -181,4 +181,5 @@
         }
     </script>
 </body>
+
 </html>
