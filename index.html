@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlobalShip Logistics - Home</title>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <style>
-        /* Professional CSS Styles */
+        /* [Same CSS as before, unchanged] */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -116,6 +119,7 @@
     </style>
 </head>
 <body>
+    <!-- [Same HTML structure as before] -->
     <header>
         <h1>GlobalShip Logistics</h1>
         <p>Your Reliable Shipping Partner</p>
@@ -174,7 +178,6 @@
             <textarea id="message" placeholder="Your Message" required></textarea>
             <button type="submit">Send</button>
         </form>
-        <p>Note: This form uses mailto for demonstration. For production, integrate a backend service like EmailJS or Formspree to send emails to your specified address (e.g., info@globalship.com).</p>
     </section>
 
     <footer>
@@ -183,40 +186,49 @@
     </footer>
 
     <script>
-        // JavaScript for functionality
-        const shipmentsKey = 'globalship_shipments';
-
-        // Initialize shipments if not exist
-        if (!localStorage.getItem(shipmentsKey)) {
-            localStorage.setItem(shipmentsKey, JSON.stringify([]));
-        }
+        // Initialize Firebase
+        const firebaseConfig = {
+            // Replace with your config
+            apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
+            authDomain: "shipping-app-ac850.firebaseapp.com",
+            projectId: "shipping-app-ac850",
+            storageBucket: "shipping-app-ac850.firebasestorage.app",
+            messagingSenderId: "190336015131",
+            appId: "1:190336015131:web:e07c59b73b1119001bd1be"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         // Tracking form
-        document.getElementById('tracking-form').addEventListener('submit', function(e) {
+        document.getElementById('tracking-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const trackingNumber = document.getElementById('tracking-number').value;
-            const shipments = JSON.parse(localStorage.getItem(shipmentsKey));
-            const shipment = shipments.find(s => s.trackingNumber === trackingNumber);
             const resultDiv = document.getElementById('tracking-result');
             const statusP = document.getElementById('status');
             const historyUl = document.getElementById('location-history');
 
-            if (shipment) {
-                statusP.textContent = `Status: ${shipment.status}`;
-                historyUl.innerHTML = '';
-                shipment.locationHistory.forEach(loc => {
-                    const li = document.createElement('li');
-                    li.textContent = loc;
-                    historyUl.appendChild(li);
-                });
-                resultDiv.style.display = 'block';
-            } else {
-                alert('Tracking number not found.');
-                resultDiv.style.display = 'none';
+            try {
+                const doc = await db.collection('shipments').doc(trackingNumber).get();
+                if (doc.exists) {
+                    const shipment = doc.data();
+                    statusP.textContent = `Status: ${shipment.status}`;
+                    historyUl.innerHTML = '';
+                    shipment.locationHistory.forEach(loc => {
+                        const li = document.createElement('li');
+                        li.textContent = loc;
+                        historyUl.appendChild(li);
+                    });
+                    resultDiv.style.display = 'block';
+                } else {
+                    alert('Tracking number not found.');
+                    resultDiv.style.display = 'none';
+                }
+            } catch (error) {
+                alert('Error fetching shipment: ' + error.message);
             }
         });
 
-        // Fake live comments
+        // Fake live comments (unchanged)
         const fakeComments = [
             'Just received my package! Thanks GlobalShip!',
             'Fast shipping to Europe.',
@@ -232,17 +244,27 @@
             commentsBox.appendChild(comment);
             commentsBox.scrollTop = commentsBox.scrollHeight;
         }
-        setInterval(addFakeComment, 5000); // Add every 5 seconds
+        setInterval(addFakeComment, 5000);
 
-        // Contact form (simulated with mailto)
+        // Contact form with EmailJS
+        (function() {
+            emailjs.init('YOUR_EMAILJS_USER_ID'); // Replace with your EmailJS User ID
+        })();
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
-            const mailtoLink = `mailto:info@globalship.com?subject=Contact from ${name}&body=From: ${email}%0D%0A%0D%0AMessage: ${message}`;
-            window.location.href = mailtoLink;
-            alert('Opening your email client to send the message.');
+
+            emailjs.send('YOUR_EMAILJS_SERVICE_ID', 'YOUR_EMAILJS_TEMPLATE_ID', {
+                from_name: name,
+                from_email: email,
+                message: message
+            }).then(() => {
+                alert('Message sent successfully!');
+            }, (error) => {
+                alert('Error sending message: ' + error.text);
+            });
         });
     </script>
 </html>
