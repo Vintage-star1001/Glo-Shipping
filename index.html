@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalShip Logistics - Home</title>
+    <style>
+        /* Professional CSS Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 2s ease-in;
+        }
+        .hero {
+            text-align: center;
+            padding: 50px 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .hero img {
+            width: 300px;
+            height: auto;
+            margin: 10px;
+            animation: slideIn 1s ease-out;
+        }
+        #tracking-form {
+            margin: 20px auto;
+            max-width: 400px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #tracking-result {
+            margin: 20px auto;
+            max-width: 400px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            display: none;
+        }
+        #about-us, #reviews, #live-comments, #contact-us {
+            padding: 40px 20px;
+            background: white;
+            margin: 20px auto;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            animation: fadeIn 2s ease-in;
+        }
+        .review {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        #live-comments-box {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: #f9f9f9;
+        }
+        .comment {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            animation: newComment 0.5s ease-in;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #007bff;
+            color: white;
+        }
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        @keyframes newComment {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Hide admin link */
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GlobalShip Logistics</h1>
+        <p>Your Reliable Shipping Partner</p>
+    </header>
+
+    <section class="hero">
+        <h2>Welcome to GlobalShip</h2>
+        <p>We deliver worldwide with trucks and planes.</p>
+        <img src="https://firstduemovers.com/wp-content/uploads/2023/01/DtC-image.jpg" alt="Delivery Truck">
+        <img src="https://truckfirstclass.com/wp-content/uploads/2022/09/full-truckload-ftl.png" alt="Delivery Truck">
+        <img src="https://globalcorporatelogistics.com/wp-content/uploads/2024/08/Global-Corporate-Logistics-Airfreight-scaled.jpg" alt="Cargo Plane">
+        <img src="https://shipsigma.com/hubfs/UPS%20and%20FedEx%20Pilot%20Flying%20Hours-%20A%20Comparative%20Analysis%20for%20Cost-Efficient%20Shipping.jpeg" alt="Cargo Plane">
+    </section>
+
+    <section id="tracking">
+        <form id="tracking-form">
+            <h2>Track Your Shipment</h2>
+            <input type="text" id="tracking-number" placeholder="Enter Tracking Number" required>
+            <button type="submit">Track</button>
+        </form>
+        <div id="tracking-result">
+            <h3>Shipment Details</h3>
+            <p id="status"></p>
+            <h4>Location History</h4>
+            <ul id="location-history"></ul>
+        </div>
+    </section>
+
+    <section id="about-us">
+        <h2>About Us</h2>
+        <p>GlobalShip Logistics is a leading shipping company providing fast and reliable delivery services worldwide. With a fleet of trucks and cargo planes, we ensure your packages arrive on time.</p>
+    </section>
+
+    <section id="reviews">
+        <h2>Customer Reviews</h2>
+        <div class="review">🇺🇸 John Doe: Excellent service! Fast delivery.</div>
+        <div class="review">🇬🇧 Jane Smith: Reliable and affordable.</div>
+        <div class="review">🇫🇷 Pierre Dupont: Great tracking system.</div>
+        <div class="review">🇩🇪 Anna Müller: Professional team.</div>
+        <div class="review">🇮🇳 Raj Patel: On-time delivery every time.</div>
+        <div class="review">🇨🇦 Emily Johnson: Highly recommended.</div>
+        <div class="review">🇦🇺 Michael Brown: Smooth experience.</div>
+        <div class="review">🇧🇷 Sofia Silva: Best shipping company.</div>
+    </section>
+
+    <section id="live-comments">
+        <h2>Live Comments</h2>
+        <div id="live-comments-box"></div>
+    </section>
+
+    <section id="contact-us">
+        <h2>Contact Us</h2>
+        <form id="contact-form">
+            <input type="text" id="name" placeholder="Your Name" required>
+            <input type="email" id="email" placeholder="Your Email" required>
+            <textarea id="message" placeholder="Your Message" required></textarea>
+            <button type="submit">Send</button>
+        </form>
+        <p>Note: This form uses mailto for demonstration. For production, integrate a backend service like EmailJS or Formspree to send emails to your specified address (e.g., info@globalship.com).</p>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 GlobalShip Logistics</p>
+        <!-- Hidden admin link: Access via direct URL like /admin.html -->
+    </footer>
+
+    <script>
+        // JavaScript for functionality
+        const shipmentsKey = 'globalship_shipments';
+
+        // Initialize shipments if not exist
+        if (!localStorage.getItem(shipmentsKey)) {
+            localStorage.setItem(shipmentsKey, JSON.stringify([]));
+        }
+
+        // Tracking form
+        document.getElementById('tracking-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const trackingNumber = document.getElementById('tracking-number').value;
+            const shipments = JSON.parse(localStorage.getItem(shipmentsKey));
+            const shipment = shipments.find(s => s.trackingNumber === trackingNumber);
+            const resultDiv = document.getElementById('tracking-result');
+            const statusP = document.getElementById('status');
+            const historyUl = document.getElementById('location-history');
+
+            if (shipment) {
+                statusP.textContent = `Status: ${shipment.status}`;
+                historyUl.innerHTML = '';
+                shipment.locationHistory.forEach(loc => {
+                    const li = document.createElement('li');
+                    li.textContent = loc;
+                    historyUl.appendChild(li);
+                });
+                resultDiv.style.display = 'block';
+            } else {
+                alert('Tracking number not found.');
+                resultDiv.style.display = 'none';
+            }
+        });
+
+        // Fake live comments
+        const fakeComments = [
+            'Just received my package! Thanks GlobalShip!',
+            'Fast shipping to Europe.',
+            'Excellent customer service.',
+            'Reliable as always.',
+            'Love the tracking feature.'
+        ];
+        const commentsBox = document.getElementById('live-comments-box');
+        function addFakeComment() {
+            const comment = document.createElement('div');
+            comment.classList.add('comment');
+            comment.textContent = fakeComments[Math.floor(Math.random() * fakeComments.length)];
+            commentsBox.appendChild(comment);
+            commentsBox.scrollTop = commentsBox.scrollHeight;
+        }
+        setInterval(addFakeComment, 5000); // Add every 5 seconds
+
+        // Contact form (simulated with mailto)
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const mailtoLink = `mailto:info@globalship.com?subject=Contact from ${name}&body=From: ${email}%0D%0A%0D%0AMessage: ${message}`;
+            window.location.href = mailtoLink;
+            alert('Opening your email client to send the message.');
+        });
+    </script>
+</html>

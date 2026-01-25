@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalShip Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        #login-form {
+            max-width: 300px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #admin-panel {
+            display: none;
+            padding: 20px;
+        }
+        input, button, select {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #shipment-list {
+            margin-top: 20px;
+        }
+        .shipment {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <form id="login-form">
+        <h2>Admin Login</h2>
+        <input type="password" id="password" placeholder="Enter Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <div id="admin-panel">
+        <h2>Admin Panel</h2>
+        <button id="logout">Logout</button>
+        <h3>Generate New Tracking Number</h3>
+        <button id="generate-tracking">Generate</button>
+        <p id="new-tracking"></p>
+
+        <h3>Update Shipment</h3>
+        <input type="text" id="update-tracking" placeholder="Tracking Number">
+        <select id="update-status">
+            <option value="Pending">Pending</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+        </select>
+        <input type="text" id="add-location" placeholder="Add Location">
+        <button id="update-shipment">Update</button>
+
+        <h3>Shipment List</h3>
+        <div id="shipment-list"></div>
+    </div>
+
+    <script>
+        const shipmentsKey = 'globalship_shipments';
+        const adminPassword = 'admin123'; // Change this to a secure password
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            if (password === adminPassword) {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                loadShipments();
+            } else {
+                alert('Incorrect password.');
+            }
+        });
+
+        // Logout
+        document.getElementById('logout').addEventListener('click', function() {
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        });
+
+        // Generate tracking
+        document.getElementById('generate-tracking').addEventListener('click', function() {
+            const trackingNumber = 'GS' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const shipments = JSON.parse(localStorage.getItem(shipmentsKey)) || [];
+            shipments.push({ trackingNumber, status: 'Pending', locationHistory: [] });
+            localStorage.setItem(shipmentsKey, JSON.stringify(shipments));
+            document.getElementById('new-tracking').textContent = `New Tracking: ${trackingNumber}`;
+            loadShipments();
+        });
+
+        // Update shipment
+        document.getElementById('update-shipment').addEventListener('click', function() {
+            const trackingNumber = document.getElementById('update-tracking').value;
+            const status = document.getElementById('update-status').value;
+            const location = document.getElementById('add-location').value;
+            const shipments = JSON.parse(localStorage.getItem(shipmentsKey));
+            const shipment = shipments.find(s => s.trackingNumber === trackingNumber);
+            if (shipment) {
+                shipment.status = status;
+                if (location) {
+                    shipment.locationHistory.push(location);
+                }
+                localStorage.setItem(shipmentsKey, JSON.stringify(shipments));
+                alert('Shipment updated.');
+                loadShipments();
+            } else {
+                alert('Tracking number not found.');
+            }
+        });
+
+        // Load shipments
+        function loadShipments() {
+            const shipments = JSON.parse(localStorage.getItem(shipmentsKey)) || [];
+            const list = document.getElementById('shipment-list');
+            list.innerHTML = '';
+            shipments.forEach(s => {
+                const div = document.createElement('div');
+                div.classList.add('shipment');
+                div.innerHTML = `<strong>${s.trackingNumber}</strong> - Status: ${s.status}<br>History: ${s.locationHistory.join(', ')}`;
+                list.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
