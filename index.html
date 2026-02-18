@@ -132,8 +132,7 @@
         <p>We deliver worldwide with trucks and planes.</p>
         <img src="https://firstduemovers.com/wp-content/uploads/2023/01/DtC-image.jpg" alt="Delivery Truck">
         <img src="https://truckfirstclass.com/wp-content/uploads/2022/09/full-truckload-ftl.png" alt="Delivery Truck">
-        <img src="https://globalcorporatelogistics.com/wp-content/uploads/2024/08/Global-Corporate-Logistics-Airfreight-scaled.jpg" alt="Cargo Plane">
-        <img src="https://shipsigma.com/hubfs/UPS%20and%20FedEx%20Pilot%20Flying%20Hours-%20A%20Comparative%20Analysis%20for%20Cost-Efficient%20Shipping.jpeg" alt="Cargo Plane">
+        <img src="https://globalcorporatelogistics.com/wp-content/uploads/2024/08/Global-Corporate-Logistics-Airfreight-scaled.jpg" alt="Cargo Plane"><img src="https://shipsigma.com/hubfs/UPS%20and%20FedEx%20Pilot%20Flying%20Hours-%20A%20Comparative%20Analysis%20for%20Cost-Efficient%20Shipping.jpeg" alt="Cargo Plane">
     </section>
 
     <section id="tracking">
@@ -191,9 +190,9 @@
     </footer>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
@@ -209,16 +208,9 @@
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        enableIndexedDbPersistence(db).catch((err) => {
-            if (err.code === 'failed-precondition') {
-                console.log('Persistence failed: Multiple tabs open');
-            } else if (err.code === 'unimplemented') {
-                console.log('Persistence not supported in this browser');
-            }
-        });
+        
 
-        document.getElementById('tracking-form').addEventListener('submit', function(e) {
-            e.preventDefault();
+        document.getElementById('tracking-form').addEventListener('submit', function(e) {e.preventDefault();
             const trackingNumber = document.getElementById('tracking-number').value.trim();
             const resultDiv = document.getElementById('tracking-result');
             const statusP = document.getElementById('status');
@@ -240,7 +232,7 @@
                 unsub = onSnapshot(doc(db, 'shipments', trackingNumber), (docSnap) => {
                     if (docSnap.exists()) {
                         const shipment = docSnap.data();
-                        statusP.textContent = `Status: ${shipment.status}`;
+                        statusP.textContent = Status: ${shipment.status};
                         historyUl.innerHTML = '';
                         (shipment.locationHistory || []).forEach(loc => {
                             const li = document.createElement('li');
@@ -291,7 +283,7 @@
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
-            const mailtoLink = `mailto:info@globalship.com?subject=Contact from ${name}&body=From: ${email}%0D%0A%0D%0AMessage: ${message}`;
+            const mailtoLink = mailto:info@globalship.com?subject=Contact from ${name}&body=From: ${email}%0D%0A%0D%0AMessage: ${message};
             window.location.href = mailtoLink;
             alert('Opening your email client to send the message.');
         });

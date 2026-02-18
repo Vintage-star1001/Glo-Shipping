@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GlobalShip Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        #login-form {
+            max-width: 300px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #admin-panel {
+            display: none;
+            padding: 20px;
+        }
+        input, button, select {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #shipment-list {
+            margin-top: 20px;
+        }
+        .shipment {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 10px;
+            color: #007bff;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <form id="login-form">
+        <h2>Admin Login</h2>
+        <input type="email" id="email" placeholder="sherrywilkins6@gmail.com" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+
+    <div id="admin-panel">
+        <h2>Admin Panel</h2>
+        <button id="logout">Logout</button>
+
+        <h3>Generate New Tracking Number</h3>
+        <button id="generate-tracking">Generate</button>
+        <p id="new-tracking"></p>
+        <div id="generate-loading" class="loading" style="display: none;">Generating...</div>
+        <div id="generate-error" class="error" style="display: none;"></div>
+
+        <h3>Update Shipment</h3>
+        <input type="text" id="update-tracking" placeholder="Tracking Number">
+        <select id="update-status">
+            <option value="Pending">Pending</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+        </select>
+        <input type="text" id="add-location" placeholder="Add Location">
+        <button id="update-shipment">Update</button>
+        <div id="update-loading" class="loading" style="display: none;">Updating...</div>
+        <div id="update-error" class="error" style="display: none;"></div>
+
+        <h3>Shipment List (Live Updates)</h3>
+        <div id="shipment-list"></div>
+        <div id="list-loading" class="loading">Loading shipments...</div>
+        <div id="list-error" class="error" style="display: none;"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
+            authDomain: "shipping-app-ac850.firebaseapp.com",
+            projectId: "shipping-app-ac850",
+            storageBucket: "shipping-app-ac850.firebasestorage.app",
+            messagingSenderId: "190336015131",
+            appId: "1:190336015131:web:e07c59b73b1119001bd1be",
+            measurementId: "G-7SHMLDZNR4" };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+            } catch (err) {
+                alert('Login failed: ' + err.message);
+            }
+        });
+
+        document.getElementById('logout').addEventListener('click', async () => {
+            await signOut(auth);
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        });
+
+        document.getElementById('generate-tracking').addEventListener('click', async () => {
+            const loading = document.getElementById('generate-loading');
+            const errorDiv = document.getElementById('generate-error');
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            const trackingNumber = 'GS' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            try {
+                await setDoc(doc(db, 'shipments', trackingNumber), {
+                    status: 'Pending',
+                    locationHistory: []
+                });
+                document.getElementById('new-tracking').textContent = New Tracking: ${trackingNumber};
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        document.getElementById('update-shipment').addEventListener('click', async () => {
+            const loading = document.getElementById('update-loading');
+            const errorDiv = document.getElementById('update-error');
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            const trackingNumber = document.getElementById('update-tracking').value.trim();
+            const status = document.getElementById('update-status').value;
+            const location = document.getElementById('add-location').value.trim();
+
+            if (!trackingNumber) {
+                errorDiv.textContent = 'Enter a tracking number';
+                errorDiv.style.display = 'block';
+                loading.style.display = 'none';
+                return;
+            }
+
+            const tryUpdate = async (retries = 3) => {
+                try {
+                    const docRef = doc(db, 'shipments', trackingNumber);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        const newHistory = [...(data.locationHistory || [])];
+                        if (location) newHistory.push(location);
+                        await updateDoc(docRef, { status, locationHistory: newHistory });
+                        alert('Updated successfully');
+                    } else {
+                        alert('Tracking number not found');
+                    }
+                } catch (err) {
+                    if (retries > 0 && (err.message?.includes('offline') || err.code === 'unavailable')) {
+                        await new Promise(r => setTimeout(r, 2000));
+                        return tryUpdate(retries - 1); }
+                    errorDiv.textContent = 'Error: ' + err.message;
+                    errorDiv.style.display = 'block';
+                } finally {
+                    loading.style.display = 'none';
+                }
+            };
+
+            await tryUpdate();
+        });
+
+        function loadShipments() {
+            const list = document.getElementById('shipment-list');
+            const loading = document.getElementById('list-loading');
+            const errorDiv = document.getElementById('list-error');
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            onSnapshot(collection(db, 'shipments'), (snapshot) => {
+                list.innerHTML = '';
+                snapshot.forEach(d => {
+                    const data = d.data();
+                    const div = document.createElement('div');
+                    div.className = 'shipment';
+                    div.innerHTML = <strong>${d.id}</strong> - ${data.status}<br>History: ${(data.locationHistory || []).join(', ')};
+                    list.appendChild(div);
+                });
+                loading.style.display = 'none';
+            }, (err) => {
+                errorDiv.textContent = 'Error loading list: ' + err.message;
+                errorDiv.style.display = 'block';
+                loading.style.display = 'none';
+            });
+        }
+
+        // Load list after login
+        document.getElementById('login-form').addEventListener('submit', () => {
+            setTimeout(loadShipments, 500); // slight delay to ensure auth is ready
+        });
+    </script>
+</body>
+</html>
