@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GlobalShip Logistics - Home</title>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-    <script src="https://cdn.emailjs.com/sdk/4.0/email.min.js"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <style>
-        /* [Same CSS as before, unchanged] */
+        /* Professional CSS Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -116,32 +114,18 @@
         }
         /* Hide admin link */
         .hidden { display: none; }
+        .loading {
+            text-align: center;
+            padding: 10px;
+            color: #007bff;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
-    <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
-    authDomain: "shipping-app-ac850.firebaseapp.com",
-    projectId: "shipping-app-ac850",
-    storageBucket: "shipping-app-ac850.firebasestorage.app",
-    messagingSenderId: "190336015131",
-    appId: "1:190336015131:web:e07c59b73b1119001bd1be",
-    measurementId: "G-7SHMLDZNR4"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
     <header>
         <h1>GlobalShip Logistics</h1>
         <p>Your Reliable Shipping Partner</p>
@@ -162,8 +146,10 @@
             <input type="text" id="tracking-number" placeholder="Enter Tracking Number" required>
             <button type="submit">Track</button>
         </form>
+        <div id="tracking-loading" class="loading" style="display: none;">Tracking...</div>
+        <div id="tracking-error" class="error" style="display: none;"></div>
         <div id="tracking-result">
-            <h3>Shipment Details</h3>
+            <h3>Shipment Details (Live Updates)</h3>
             <p id="status"></p>
             <h4>Location History</h4>
             <ul id="location-history"></ul>
@@ -200,6 +186,7 @@
             <textarea id="message" placeholder="Your Message" required></textarea>
             <button type="submit">Send</button>
         </form>
+        <p>Note: This form uses mailto for demonstration. For production, integrate a backend service like EmailJS or Formspree to send emails to your specified address (e.g., info@globalship.com).</p>
     </section>
 
     <footer>
@@ -207,32 +194,60 @@
         <!-- Hidden admin link: Access via direct URL like /admin.html -->
     </footer>
 
-    <script>
-        // Initialize Firebase
+    <script type="module">
+        // Modular Firebase imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+
+        // Firebase config
         const firebaseConfig = {
-            // Replace with your config
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
             authDomain: "shipping-app-ac850.firebaseapp.com",
             projectId: "shipping-app-ac850",
             storageBucket: "shipping-app-ac850.firebasestorage.app",
             messagingSenderId: "190336015131",
-            appId: "1:190336015131:web:e07c59b73b1119001bd1be"
+            appId: "1:190336015131:web:e07c59b73b1119001bd1be",
+            measurementId: "G-7SHMLDZNR4"
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
 
-        // Tracking form
-        document.getElementById('tracking-form').addEventListener('submit', async function(e) {
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        // Enable offline persistence
+        enableIndexedDbPersistence(db)
+            .catch((err) => {
+                if (err.code === 'failed-precondition') {
+                    console.log('Persistence failed: Multiple tabs open');
+                } else if (err.code === 'unimplemented') {
+                    console.log('Persistence not supported in this browser');
+                }
+            });
+
+        // Tracking form with real-time updates
+        document.getElementById('tracking-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const trackingNumber = document.getElementById('tracking-number').value;
+            const trackingNumber = document.getElementById('tracking-number').value.trim();
             const resultDiv = document.getElementById('tracking-result');
             const statusP = document.getElementById('status');
             const historyUl = document.getElementById('location-history');
+            const trackingLoading = document.getElementById('tracking-loading');
+            const trackingError = document.getElementById('tracking-error');
 
-            try {
-                const doc = await db.collection('shipments').doc(trackingNumber).get();
-                if (doc.exists) {
-                    const shipment = doc.data();
+            if (!trackingNumber) return alert('Enter a tracking number');
+
+            trackingLoading.style.display = 'block';
+            trackingError.style.display = 'none';
+            resultDiv.style.display = 'block';
+            statusP.textContent = 'Loading...';
+            historyUl.innerHTML = '';
+
+            // Real-time listener for the document
+            const unsub = onSnapshot(doc(db, 'shipments', trackingNumber), (docSnap) => {
+                if (docSnap.exists()) {
+                    const shipment = docSnap.data();
                     statusP.textContent = `Status: ${shipment.status}`;
                     historyUl.innerHTML = '';
                     shipment.locationHistory.forEach(loc => {
@@ -240,14 +255,18 @@
                         li.textContent = loc;
                         historyUl.appendChild(li);
                     });
-                    resultDiv.style.display = 'block';
                 } else {
-                    alert('Tracking number not found.');
-                    resultDiv.style.display = 'none';
+                    statusP.textContent = 'Tracking number not found.';
                 }
-            } catch (error) {
-                alert('Error fetching shipment: ' + error.message);
-            }
+                trackingLoading.style.display = 'none';
+            }, (error) => {
+                trackingError.textContent = 'Error fetching shipment: ' + error.message;
+                trackingError.style.display = 'block';
+                trackingLoading.style.display = 'none';
+            });
+
+            // Optional: Unsubscribe when leaving page or after timeout
+            // window.addEventListener('beforeunload', unsub);
         });
 
         // Fake live comments (unchanged)
@@ -266,31 +285,18 @@
             commentsBox.appendChild(comment);
             commentsBox.scrollTop = commentsBox.scrollHeight;
         }
-        setInterval(addFakeComment, 5000);
+        setInterval(addFakeComment, 5000); // Add every 5 seconds
 
-        // Contact form with EmailJS
-        (function() {
-            emailjs.init('YOUR_EMAILJS_USER_ID'); // Replace with your EmailJS User ID
-        })();
+        // Contact form (simulated with mailto)
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
-
-            emailjs.send('YOUR_EMAILJS_SERVICE_ID', 'YOUR_EMAILJS_TEMPLATE_ID', {
-                from_name: name,
-                from_email: email,
-                message: message
-            }).then(() => {
-                alert('Message sent successfully!');
-            }, (error) => {
-                alert('Error sending message: ' + error.text);
-            });
+            const mailtoLink = `mailto:info@globalship.com?subject=Contact from ${name}&body=From: ${email}%0D%0A%0D%0AMessage: ${message}`;
+            window.location.href = mailtoLink;
+            alert('Opening your email client to send the message.');
         });
     </script>
-
+</body>
 </html>
-
-
-
