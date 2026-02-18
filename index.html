@@ -6,7 +6,6 @@
     <title>GlobalShip Logistics - Home</title>
     <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <style>
-        /* Professional CSS Styles */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -99,7 +98,6 @@
             background-color: #007bff;
             color: white;
         }
-        /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -112,8 +110,6 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Hide admin link */
-        .hidden { display: none; }
         .loading {
             text-align: center;
             padding: 10px;
@@ -190,17 +186,15 @@
     </section>
 
     <footer>
-        <p>&copy; 2026 GlobalShip Logistics</p>
+        <p>© 2026 GlobalShip Logistics</p>
         <!-- Hidden admin link: Access via direct URL like /admin.html -->
     </footer>
 
     <script type="module">
-        // Modular Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
 
-        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
             authDomain: "shipping-app-ac850.firebaseapp.com",
@@ -211,22 +205,18 @@
             measurementId: "G-7SHMLDZNR4"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        // Enable offline persistence
-        enableIndexedDbPersistence(db)
-            .catch((err) => {
-                if (err.code === 'failed-precondition') {
-                    console.log('Persistence failed: Multiple tabs open');
-                } else if (err.code === 'unimplemented') {
-                    console.log('Persistence not supported in this browser');
-                }
-            });
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.log('Persistence failed: Multiple tabs open');
+            } else if (err.code === 'unimplemented') {
+                console.log('Persistence not supported in this browser');
+            }
+        });
 
-        // Tracking form with real-time updates
         document.getElementById('tracking-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const trackingNumber = document.getElementById('tracking-number').value.trim();
@@ -244,32 +234,40 @@
             statusP.textContent = 'Loading...';
             historyUl.innerHTML = '';
 
-            // Real-time listener for the document
-            const unsub = onSnapshot(doc(db, 'shipments', trackingNumber), (docSnap) => {
-                if (docSnap.exists()) {
-                    const shipment = docSnap.data();
-                    statusP.textContent = `Status: ${shipment.status}`;
-                    historyUl.innerHTML = '';
-                    shipment.locationHistory.forEach(loc => {
-                        const li = document.createElement('li');
-                        li.textContent = loc;
-                        historyUl.appendChild(li);
-                    });
-                } else {
-                    statusP.textContent = 'Tracking number not found.';
-                }
-                trackingLoading.style.display = 'none';
-            }, (error) => {
-                trackingError.textContent = 'Error fetching shipment: ' + error.message;
-                trackingError.style.display = 'block';
-                trackingLoading.style.display = 'none';
-            });
+            let unsub;
 
-            // Optional: Unsubscribe when leaving page or after timeout
-            // window.addEventListener('beforeunload', unsub);
+            const setupSnapshot = (retries = 3) => {
+                unsub = onSnapshot(doc(db, 'shipments', trackingNumber), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const shipment = docSnap.data();
+                        statusP.textContent = `Status: ${shipment.status}`;
+                        historyUl.innerHTML = '';
+                        (shipment.locationHistory || []).forEach(loc => {
+                            const li = document.createElement('li');
+                            li.textContent = loc;
+                            historyUl.appendChild(li);
+                        });
+                    } else {
+                        statusP.textContent = 'Tracking number not found.';
+                    }
+                    trackingLoading.style.display = 'none';
+                }, async (error) => {
+                    if (retries > 0 && (error.message?.includes('offline') || error.code === 'unavailable')) {
+                        console.log('Retrying tracking...');
+                        await new Promise(r => setTimeout(r, 2000));
+                        setupSnapshot(retries - 1);
+                    } else {
+                        trackingError.textContent = 'Error: ' + (error.message || 'Unknown error');
+                        trackingError.style.display = 'block';
+                        trackingLoading.style.display = 'none';
+                    }
+                });
+            };
+
+            setupSnapshot();
         });
 
-        // Fake live comments (unchanged)
+        // Fake live comments
         const fakeComments = [
             'Just received my package! Thanks GlobalShip!',
             'Fast shipping to Europe.',
@@ -285,9 +283,9 @@
             commentsBox.appendChild(comment);
             commentsBox.scrollTop = commentsBox.scrollHeight;
         }
-        setInterval(addFakeComment, 5000); // Add every 5 seconds
+        setInterval(addFakeComment, 5000);
 
-        // Contact form (simulated with mailto)
+        // Contact form
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
