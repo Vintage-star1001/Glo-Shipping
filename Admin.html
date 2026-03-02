@@ -63,7 +63,7 @@
 <body>
     <form id="login-form">
         <h2>Admin Login</h2>
-        <input type="email" id="email" placeholder="sherrywilkins6@gmail.com" required>
+        <input type="email" id="email" placeholder="Admin Email" required>
         <input type="password" id="password" placeholder="Password" required>
         <button type="submit">Login</button>
     </form>
@@ -100,7 +100,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
@@ -232,4 +232,5 @@
         });
     </script>
 </body>
+
 </html>
