@@ -71,7 +71,6 @@
     <div id="admin-panel">
         <h2>Admin Panel</h2>
         <button id="logout">Logout</button>
-
         <h3>Generate New Tracking Number</h3>
         <button id="generate-tracking">Generate</button>
         <p id="new-tracking"></p>
@@ -97,11 +96,13 @@
     </div>
 
     <script type="module">
+        // Modular Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 
+        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
             authDomain: "shipping-app-ac850.firebaseapp.com",
@@ -109,16 +110,17 @@
             storageBucket: "shipping-app-ac850.firebasestorage.app",
             messagingSenderId: "190336015131",
             appId: "1:190336015131:web:e07c59b73b1119001bd1be",
-            measurementId: "G-7SHMLDZNR4" };
+            measurementId: "G-7SHMLDZNR4"
+        };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -126,18 +128,21 @@
                 await signInWithEmailAndPassword(auth, email, password);
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('admin-panel').style.display = 'block';
-            } catch (err) {
-                alert('Login failed: ' + err.message);
+                loadShipments(); // Initial load
+            } catch (error) {
+                alert('Login failed: ' + error.message);
             }
         });
 
-        document.getElementById('logout').addEventListener('click', async () => {
+        // Logout
+        document.getElementById('logout').addEventListener('click', async function() {
             await signOut(auth);
             document.getElementById('admin-panel').style.display = 'none';
             document.getElementById('login-form').style.display = 'block';
         });
 
-        document.getElementById('generate-tracking').addEventListener('click', async () => {
+        // Generate tracking
+        document.getElementById('generate-tracking').addEventListener('click', async function() {
             const loading = document.getElementById('generate-loading');
             const errorDiv = document.getElementById('generate-error');
             loading.style.display = 'block';
@@ -149,16 +154,17 @@
                     status: 'Pending',
                     locationHistory: []
                 });
-                document.getElementById('new-tracking').textContent = New Tracking: ${trackingNumber};
-            } catch (err) {
-                errorDiv.textContent = 'Error: ' + err.message;
+                document.getElementById('new-tracking').textContent = `New Tracking: ${trackingNumber}`;
+            } catch (error) {
+                errorDiv.textContent = 'Error generating: ' + error.message;
                 errorDiv.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
             }
         });
 
-        document.getElementById('update-shipment').addEventListener('click', async () => {
+        // Update shipment
+        document.getElementById('update-shipment').addEventListener('click', async function() {
             const loading = document.getElementById('update-loading');
             const errorDiv = document.getElementById('update-error');
             loading.style.display = 'block';
@@ -168,40 +174,32 @@
             const status = document.getElementById('update-status').value;
             const location = document.getElementById('add-location').value.trim();
 
-            if (!trackingNumber) {
-                errorDiv.textContent = 'Enter a tracking number';
-                errorDiv.style.display = 'block';
-                loading.style.display = 'none';
-                return;
-            }
+            if (!trackingNumber) return alert('Enter a tracking number');
 
-            const tryUpdate = async (retries = 3) => {
-                try {
-                    const docRef = doc(db, 'shipments', trackingNumber);
-                    const docSnap = await getDoc(docRef);
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        const newHistory = [...(data.locationHistory || [])];
-                        if (location) newHistory.push(location);
-                        await updateDoc(docRef, { status, locationHistory: newHistory });
-                        alert('Updated successfully');
-                    } else {
-                        alert('Tracking number not found');
-                    }
-                } catch (err) {
-                    if (retries > 0 && (err.message?.includes('offline') || err.code === 'unavailable')) {
-                        await new Promise(r => setTimeout(r, 2000));
-                        return tryUpdate(retries - 1); }
-                    errorDiv.textContent = 'Error: ' + err.message;
-                    errorDiv.style.display = 'block';
-                } finally {
-                    loading.style.display = 'none';
+            try {
+                const docRef = doc(db, 'shipments', trackingNumber);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const currentData = docSnap.data();
+                    const newHistory = [...(currentData.locationHistory || [])];
+                    if (location) newHistory.push(location);
+                    await updateDoc(docRef, {
+                        status: status,
+                        locationHistory: newHistory
+                    });
+                    alert('Shipment updated.');
+                } else {
+                    alert('Tracking number not found.');
                 }
-            };
-
-            await tryUpdate();
+            } catch (error) {
+                errorDiv.textContent = 'Error updating: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
         });
 
+        // Load shipments with real-time updates
         function loadShipments() {
             const list = document.getElementById('shipment-list');
             const loading = document.getElementById('list-loading');
@@ -211,26 +209,20 @@
 
             onSnapshot(collection(db, 'shipments'), (snapshot) => {
                 list.innerHTML = '';
-                snapshot.forEach(d => {
-                    const data = d.data();
+                snapshot.forEach((docSnap) => {
+                    const s = docSnap.data();
                     const div = document.createElement('div');
-                    div.className = 'shipment';
-                    div.innerHTML = <strong>${d.id}</strong> - ${data.status}<br>History: ${(data.locationHistory || []).join(', ')};
+                    div.classList.add('shipment');
+                    div.innerHTML = `<strong>${docSnap.id}</strong> - Status: ${s.status}<br>History: ${(s.locationHistory || []).join(', ')}`;
                     list.appendChild(div);
                 });
                 loading.style.display = 'none';
-            }, (err) => {
-                errorDiv.textContent = 'Error loading list: ' + err.message;
+            }, (error) => {
+                errorDiv.textContent = 'Error loading shipments: ' + error.message;
                 errorDiv.style.display = 'block';
                 loading.style.display = 'none';
             });
         }
-
-        // Load list after login
-        document.getElementById('login-form').addEventListener('submit', () => {
-            setTimeout(loadShipments, 500); // slight delay to ensure auth is ready
-        });
     </script>
 </body>
-
 </html>
