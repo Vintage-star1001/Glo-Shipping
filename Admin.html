@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'self';">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <title>GlobalShip Admin Panel</title>
     <style>
         body {
@@ -83,7 +85,6 @@
             <option value="Pending">Pending</option>
             <option value="In Transit">In Transit</option>
             <option value="Delivered">Delivered</option>
-            <option value="On Hold">On Hold</option>
         </select>
         <input type="text" id="add-location" placeholder="Add Location">
         <button id="update-shipment">Update</button>
@@ -97,13 +98,11 @@
     </div>
 
     <script type="module">
-        // Modular Firebase imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 
-        // Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
             authDomain: "shipping-app-ac850.firebaseapp.com",
@@ -114,35 +113,35 @@
             measurementId: "G-7SHMLDZNR4"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        // Login
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            if (!email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
+                alert('Invalid email format');
+                return;
+            }
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 document.getElementById('login-form').style.display = 'none';
                 document.getElementById('admin-panel').style.display = 'block';
-                loadShipments(); // Initial load
+                loadShipments();
             } catch (error) {
                 alert('Login failed: ' + error.message);
             }
         });
 
-        // Logout
         document.getElementById('logout').addEventListener('click', async function() {
             await signOut(auth);
             document.getElementById('admin-panel').style.display = 'none';
             document.getElementById('login-form').style.display = 'block';
         });
 
-        // Generate tracking
         document.getElementById('generate-tracking').addEventListener('click', async function() {
             const loading = document.getElementById('generate-loading');
             const errorDiv = document.getElementById('generate-error');
@@ -164,7 +163,6 @@
             }
         });
 
-        // Update shipment
         document.getElementById('update-shipment').addEventListener('click', async function() {
             const loading = document.getElementById('update-loading');
             const errorDiv = document.getElementById('update-error');
@@ -175,7 +173,11 @@
             const status = document.getElementById('update-status').value;
             const location = document.getElementById('add-location').value.trim();
 
-            if (!trackingNumber) return alert('Enter a tracking number');
+            if (!trackingNumber.match(/^[A-Z0-9]+$/)) {
+                alert('Invalid tracking number format');
+                loading.style.display = 'none';
+                return;
+            }
 
             try {
                 const docRef = doc(db, 'shipments', trackingNumber);
@@ -200,7 +202,6 @@
             }
         });
 
-        // Load shipments with real-time updates
         function loadShipments() {
             const list = document.getElementById('shipment-list');
             const loading = document.getElementById('list-loading');
