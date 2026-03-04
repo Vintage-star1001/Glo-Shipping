@@ -3,8 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'self';">
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <title>GlobalShip Admin Panel</title>
     <style>
         body {
@@ -120,12 +118,8 @@
 
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value.trim();
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            if (!email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
-                alert('Invalid email format');
-                return;
-            }
             try {
                 await signInWithEmailAndPassword(auth, email, password);
                 document.getElementById('login-form').style.display = 'none';
@@ -173,11 +167,7 @@
             const status = document.getElementById('update-status').value;
             const location = document.getElementById('add-location').value.trim();
 
-            if (!trackingNumber.match(/^[A-Z0-9]+$/)) {
-                alert('Invalid tracking number format');
-                loading.style.display = 'none';
-                return;
-            }
+            if (!trackingNumber) return alert('Enter a tracking number');
 
             try {
                 const docRef = doc(db, 'shipments', trackingNumber);
