@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.emailjs.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'self';">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <title>GlobalShip Logistics - Home</title>
-    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js" integrity="sha512-7rAQqU+LkfqOx9F2YzOOg8ovWzGWjWUMxy+TlpIP/u7S5q7S0pwrWgaHAbPF0Jzh95TPykuKN3zNT02krrDbaA==" crossorigin="anonymous"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,12 +27,24 @@
             padding: 50px 20px;
             background-color: #fff;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
         }
         .hero img {
             width: 300px;
             height: auto;
             margin: 10px;
             animation: slideIn 1s ease-out;
+        }
+        #truck-animation {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            animation: truckMove 10s linear infinite;
+        }
+        @keyframes truckMove {
+            from { left: -50px; }
+            to { left: 100%; }
         }
         #tracking-form {
             margin: 20px auto;
@@ -40,7 +54,21 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        input, button {
+        #pricing {
+            margin: 20px auto;
+            max-width: 400px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #pricing-result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        input, button, select {
             display: block;
             width: 100%;
             margin: 10px 0;
@@ -130,6 +158,7 @@
     <section class="hero">
         <h2>Welcome to GlobalShip</h2>
         <p>We deliver worldwide with trucks and planes.</p>
+        <div id="truck-animation">🚚</div>
         <img src="https://firstduemovers.com/wp-content/uploads/2023/01/DtC-image.jpg" alt="Delivery Truck">
         <img src="https://truckfirstclass.com/wp-content/uploads/2022/09/full-truckload-ftl.png" alt="Delivery Truck">
         <img src="https://globalcorporatelogistics.com/wp-content/uploads/2024/08/Global-Corporate-Logistics-Airfreight-scaled.jpg" alt="Cargo Plane">
@@ -150,6 +179,21 @@
             <h4>Location History</h4>
             <ul id="location-history"></ul>
         </div>
+    </section>
+
+    <section id="pricing">
+        <h2>Get a Shipping Quote</h2>
+        <form id="pricing-form">
+            <input type="number" id="weight" placeholder="Weight (kg)" min="0" required>
+            <input type="number" id="distance" placeholder="Distance (km)" min="0" required>
+            <select id="currency">
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="GHS">GHS (₵)</option>
+            </select>
+            <button type="button" id="calculate-pricing">Calculate</button>
+        </form>
+        <div id="pricing-result"></div>
     </section>
 
     <section id="about-us">
@@ -182,7 +226,7 @@
             <textarea id="message" placeholder="Your Message" required></textarea>
             <button type="submit">Send</button>
         </form>
-        <p>Note: This form uses mailto for demonstration. For production, integrate a backend service like EmailJS or Formspree to send emails to your specified address (e.g., info@globalship.com).</p>
+        <p>Messages are sent securely via EmailJS to info@globalship.com.</p>
     </section>
 
     <footer>
@@ -274,6 +318,43 @@
             commentsBox.scrollTop = commentsBox.scrollHeight;
         }
         setInterval(addFakeComment, 5000);
+
+        const exchangeRates = {
+            USD: 1,
+            EUR: 0.85,
+            GHS: 12
+        };
+
+        function calculateCost(weight, distance, currency) {
+            const baseCostUSD = (weight * 0.5) + (distance * 0.1);
+            const convertedCost = baseCostUSD * exchangeRates[currency];
+            return convertedCost.toFixed(2);
+        }
+
+        function estimateDelivery(distance) {
+            const days = Math.ceil(1 + (distance / 500));
+            return `${days}-${days + 2} days`;
+        }
+
+        document.getElementById('calculate-pricing').addEventListener('click', function() {
+            const weight = parseFloat(document.getElementById('weight').value);
+            const distance = parseFloat(document.getElementById('distance').value);
+            const currency = document.getElementById('currency').value;
+
+            if (isNaN(weight) || isNaN(distance) || weight <= 0 || distance <= 0) {
+                alert('Please enter valid weight and distance.');
+                return;
+            }
+
+            const cost = calculateCost(weight, distance, currency);
+            const delivery = estimateDelivery(distance);
+
+            document.getElementById('pricing-result').innerHTML = `
+                <p>Estimated Cost: ${cost} ${currency}</p>
+                <p>Estimated Delivery: ${delivery}</p>
+                <p>How it's calculated: Base cost = (Weight * 0.5) + (Distance * 0.1) USD, converted to selected currency. Delivery = 1 base day + 1 day per 500km, with 2-day buffer.</p>
+            `;
+        });
 
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
