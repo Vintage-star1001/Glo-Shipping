@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.emailjs.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'self';">
-    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <title>GlobalShip Logistics - Home</title>
-    <script src="https://cdn.emailjs.com/dist/email.min.js" integrity="sha512-7rAQqU+LkfqOx9F2YzOOg8ovWzGWjWUMxy+TlpIP/u7S5q7S0pwrWgaHAbPF0Jzh95TPykuKN3zNT02krrDbaA==" crossorigin="anonymous"></script>
+    <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -184,7 +182,7 @@
             <textarea id="message" placeholder="Your Message" required></textarea>
             <button type="submit">Send</button>
         </form>
-        <p>Messages are sent securely via EmailJS to info@globalship.com.</p>
+        <p>Note: This form uses mailto for demonstration. For production, integrate a backend service like EmailJS or Formspree to send emails to your specified address (e.g., info@globalship.com).</p>
     </section>
 
     <footer>
@@ -219,10 +217,7 @@
             const trackingLoading = document.getElementById('tracking-loading');
             const trackingError = document.getElementById('tracking-error');
 
-            if (!trackingNumber.match(/^[A-Z0-9]+$/)) {
-                alert('Invalid tracking number format');
-                return;
-            }
+            if (!trackingNumber) return alert('Enter a tracking number');
 
             trackingLoading.style.display = 'block';
             trackingError.style.display = 'none';
@@ -280,34 +275,14 @@
         }
         setInterval(addFakeComment, 5000);
 
-        emailjs.init('YOUR_PUBLIC_KEY');
-
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const name = document.getElementById('name').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const message = document.getElementById('message').value.trim();
-
-            if (!name || !email || !message) {
-                alert('Please fill all fields');
-                return;
-            }
-
-            if (!email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
-                alert('Invalid email format');
-                return;
-            }
-
-            emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', {
-                from_name: name,
-                from_email: email,
-                message: message
-            }).then(() => {
-                alert('Message sent successfully!');
-                document.getElementById('contact-form').reset();
-            }, (error) => {
-                alert('Error sending message: ' + error.text);
-            });
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            const mailtoLink = `mailto:info@globalship.com?subject=Contact from ${name}&body=From: ${email}%0D%0A%0D%0AMessage: ${message}`;
+            window.location.href = mailtoLink;
+            alert('Opening your email client to send the message.');
         });
     </script>
 </body>
