@@ -14,6 +14,7 @@
             padding: 0;
             background-color: #f4f4f4;
             color: #333;
+            position: relative;
         }
         header {
             background-color: #007bff;
@@ -40,11 +41,37 @@
             top: 50%;
             left: 0;
             transform: translateY(-50%);
+            font-size: 50px;
             animation: truckMove 10s linear infinite;
         }
         @keyframes truckMove {
             from { left: -50px; }
-            to { left: 100%; }
+            to { left: calc(100% + 50px); }
+        }
+        .side-gesture-left, .side-gesture-right {
+            position: fixed;
+            top: 50%;
+            width: 50px;
+            height: 50px;
+            background: #007bff;
+            color: white;
+            text-align: center;
+            line-height: 50px;
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+        .side-gesture-left {
+            left: 10px;
+            animation-direction: alternate;
+        }
+        .side-gesture-right {
+            right: 10px;
+            animation-direction: alternate-reverse;
+        }
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
         }
         #tracking-form {
             margin: 20px auto;
@@ -67,6 +94,18 @@
             padding: 10px;
             background: #f0f0f0;
             border-radius: 5px;
+        }
+        #why-choose-us {
+            padding: 40px 20px;
+            background: white;
+            margin: 20px auto;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #why-choose-us ul {
+            list-style-type: disc;
+            padding-left: 20px;
         }
         input, button, select {
             display: block;
@@ -150,6 +189,8 @@
     </style>
 </head>
 <body>
+    <div class="side-gesture-left">📦</div>
+    <div class="side-gesture-right">🚚</div>
     <header>
         <h1>GlobalShip Logistics</h1>
         <p>Your Reliable Shipping Partner</p>
@@ -183,17 +224,30 @@
 
     <section id="pricing">
         <h2>Get a Shipping Quote</h2>
-        <form id="pricing-form">
-            <input type="number" id="weight" placeholder="Weight (kg)" min="0" required>
-            <input type="number" id="distance" placeholder="Distance (km)" min="0" required>
-            <select id="currency">
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GHS">GHS (₵)</option>
-            </select>
-            <button type="button" id="calculate-pricing">Calculate</button>
-        </form>
+        <input type="number" id="weight" placeholder="Weight (kg)" min="1" required>
+        <input type="number" id="distance" placeholder="Distance (km)" min="1" required>
+        <select id="currency">
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GHS">GHS (₵)</option>
+        </select>
+        <button id="calculate-pricing">Calculate</button>
         <div id="pricing-result"></div>
+        <button id="pay-with-crypto" style="margin-top: 10px; background-color: #f7931a;">Pay with Crypto (Web3)</button>
+    </section>
+
+    <section id="why-choose-us">
+        <h2>Why Choose Us</h2>
+        <ul>
+            <li>Reliable and fast delivery worldwide.</li>
+            <li>Competitive pricing with multi-currency support.</li>
+            <li>Real-time tracking and updates.</li>
+            <li>Secure payments, including Web3 crypto options.</li>
+            <li>Excellent customer service 24/7.</li>
+            <li>Eco-friendly shipping practices.</li>
+            <li>Customizable delivery intervals based on distance.</li>
+            <li>Proven track record with positive reviews.</li>
+        </ul>
     </section>
 
     <section id="about-us">
@@ -318,43 +372,6 @@
             commentsBox.scrollTop = commentsBox.scrollHeight;
         }
         setInterval(addFakeComment, 5000);
-
-        const exchangeRates = {
-            USD: 1,
-            EUR: 0.85,
-            GHS: 12
-        };
-
-        function calculateCost(weight, distance, currency) {
-            const baseCostUSD = (weight * 0.5) + (distance * 0.1);
-            const convertedCost = baseCostUSD * exchangeRates[currency];
-            return convertedCost.toFixed(2);
-        }
-
-        function estimateDelivery(distance) {
-            const days = Math.ceil(1 + (distance / 500));
-            return `${days}-${days + 2} days`;
-        }
-
-        document.getElementById('calculate-pricing').addEventListener('click', function() {
-            const weight = parseFloat(document.getElementById('weight').value);
-            const distance = parseFloat(document.getElementById('distance').value);
-            const currency = document.getElementById('currency').value;
-
-            if (isNaN(weight) || isNaN(distance) || weight <= 0 || distance <= 0) {
-                alert('Please enter valid weight and distance.');
-                return;
-            }
-
-            const cost = calculateCost(weight, distance, currency);
-            const delivery = estimateDelivery(distance);
-
-            document.getElementById('pricing-result').innerHTML = `
-                <p>Estimated Cost: ${cost} ${currency}</p>
-                <p>Estimated Delivery: ${delivery}</p>
-                <p>How it's calculated: Base cost = (Weight * 0.5) + (Distance * 0.1) USD, converted to selected currency. Delivery = 1 base day + 1 day per 500km, with 2-day buffer.</p>
-            `;
-        });
 
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
