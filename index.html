@@ -44,6 +44,40 @@
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+        #user-dashboard {
+            margin: 20px auto;
+            max-width: 800px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .dashboard-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 18px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .dashboard-btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,123,255,0.4);
+        }
         input, button, select {
             display: block;
             width: 100%;
@@ -185,7 +219,7 @@
 
     <!-- Sign Up Modal -->
     <div id="signup-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;">
-        <div style="background:white;padding:20px;border-radius:8px;width:90%;max-width:400px;">
+        <div style="background:white;padding:25px;border-radius:12px;width:90%;max-width:420px;">
             <h2>Sign Up</h2>
             <input type="text" id="first-name" placeholder="First Name" required>
             <input type="text" id="last-name" placeholder="Last Name" required>
@@ -197,37 +231,38 @@
                 <option value="USA">USA</option>
                 <option value="UK">UK</option>
                 <option value="Germany">Germany</option>
-                <!-- Add more countries as needed -->
             </select>
-            <button id="create-account-btn">Create Account</button>
-            <button onclick="document.getElementById('signup-modal').style.display='none'">Cancel</button>
+            <button id="create-account-btn" style="margin-top:15px;">Create Account</button>
+            <button onclick="document.getElementById('signup-modal').style.display='none'" style="background:#ddd;color:#333;">Cancel</button>
         </div>
     </div>
 
     <!-- Login Modal -->
     <div id="login-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;">
-        <div style="background:white;padding:20px;border-radius:8px;width:90%;max-width:400px;">
+        <div style="background:white;padding:25px;border-radius:12px;width:90%;max-width:420px;">
             <h2>Login</h2>
             <input type="email" id="login-email" placeholder="Email" required>
             <input type="password" id="login-password" placeholder="Password" required>
-            <button id="login-account-btn">Login</button>
-            <button onclick="document.getElementById('login-modal').style.display='none'">Cancel</button>
+            <button id="login-account-btn" style="margin-top:15px;">Login</button>
+            <button onclick="document.getElementById('login-modal').style.display='none'" style="background:#ddd;color:#333;">Cancel</button>
         </div>
     </div>
 
-    <!-- Logged-in Dashboard (hidden until login) -->
-    <div id="user-dashboard" style="display:none;margin:20px auto;max-width:800px;padding:20px;background:white;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.1);">
-        <h2>Welcome, <span id="user-name"></span></h2>
-        <button onclick="createShipment()">Create Shipment / Label</button>
-        <button onclick="manageShipments()">Manage My Shipments</button>
-        <button onclick="checkoutPayment()">Checkout / Make Payment</button>
-        <button onclick="logoutUser()">Logout</button>
+    <!-- Logged-in Dashboard -->
+    <div id="user-dashboard" style="display:none;margin:30px auto;max-width:900px;padding:30px;background:white;border-radius:12px;box-shadow:0 0 15px rgba(0,0,0,0.1);">
+        <h2>Welcome, <span id="user-name"></span> 👋</h2>
+        <div class="dashboard-grid">
+            <button class="dashboard-btn" onclick="createShipment()">📦 Create Shipment / Label</button>
+            <button class="dashboard-btn" onclick="manageShipments()">📋 Manage My Shipments</button>
+            <button class="dashboard-btn" onclick="checkoutPayment()">💳 Checkout &amp; Make Payment</button>
+            <button class="dashboard-btn" onclick="logoutUser()" style="background:#dc3545;">🚪 Logout</button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 
         const firebaseConfig = {
@@ -245,7 +280,7 @@
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        // Pricing calculator
+        // Pricing calculator (unchanged from previous)
         document.getElementById('calculate-pricing').addEventListener('click', () => {
             const weight = parseFloat(document.getElementById('weight').value);
             const distance = parseFloat(document.getElementById('distance').value);
@@ -268,14 +303,9 @@
             `;
         });
 
-        // Auth modals
-        document.getElementById('signup-btn').addEventListener('click', () => {
-            document.getElementById('signup-modal').style.display = 'flex';
-        });
-
-        document.getElementById('login-btn').addEventListener('click', () => {
-            document.getElementById('login-modal').style.display = 'flex';
-        });
+        // Auth modals & dashboard logic (unchanged from previous working version)
+        document.getElementById('signup-btn').addEventListener('click', () => document.getElementById('signup-modal').style.display = 'flex');
+        document.getElementById('login-btn').addEventListener('click', () => document.getElementById('login-modal').style.display = 'flex');
 
         document.getElementById('create-account-btn').addEventListener('click', async () => {
             const email = document.getElementById('signup-email').value;
@@ -288,9 +318,7 @@
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    firstName, lastName, country, email
-                });
+                await setDoc(doc(db, 'users', userCredential.user.uid), { firstName, lastName, country, email });
                 alert('Account created successfully!');
                 document.getElementById('signup-modal').style.display = 'none';
             } catch (error) {
@@ -313,18 +341,14 @@
             signOut(auth);
         }
 
-        // Show dashboard when logged in
         onAuthStateChanged(auth, async (user) => {
             const dashboard = document.getElementById('user-dashboard');
             if (user) {
                 document.getElementById('signup-btn').style.display = 'none';
                 document.getElementById('login-btn').style.display = 'none';
                 dashboard.style.display = 'block';
-                // Fetch user name
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (userDoc.exists()) {
-                    document.getElementById('user-name').textContent = userDoc.data().firstName;
-                }
+                if (userDoc.exists()) document.getElementById('user-name').textContent = userDoc.data().firstName;
             } else {
                 document.getElementById('signup-btn').style.display = 'inline-block';
                 document.getElementById('login-btn').style.display = 'inline-block';
@@ -332,14 +356,11 @@
             }
         });
 
-        // Create shipment (simple placeholder)
-        window.createShipment = () => alert('Create Shipment form would open here (you can expand this later)');
+        window.createShipment = () => alert('Create Shipment / Label form opens here');
+        window.manageShipments = () => alert('Manage My Shipments panel opens here');
+        window.checkoutPayment = () => alert('Payment / Checkout flow opens here');
 
-        window.manageShipments = () => alert('My Shipments management would load here');
-
-        window.checkoutPayment = () => alert('Payment/checkout flow would open here');
-
-        // Contact form (fixed)
+        // Contact form (already fixed)
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
