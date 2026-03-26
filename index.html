@@ -8,90 +8,19 @@
     <title>GlobalShip Logistics - Home</title>
     <script src="https://cdn.emailjs.com/dist/email.min.js" integrity="sha512-7rAQqU+LkfqOx9F2YzOOg8ovWzGWjWUMxy+TlpIP/u7S5q7S0pwrWgaHAbPF0Jzh95TPykuKN3zNT02krrDbaA==" crossorigin="anonymous"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .auth-buttons button {
-            margin-left: 10px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .hero {
-            text-align: center;
-            padding: 50px 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        #tracking-form, #pricing {
-            margin: 20px auto;
-            max-width: 400px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        input, button, select {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 10px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #pricing-result {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 5px;
-        }
-        #why-choose-us {
-            padding: 40px 20px;
-            background: white;
-            margin: 20px auto;
-            max-width: 800px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        #tracking-result {
-            margin: 20px auto;
-            max-width: 400px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            display: none;
-        }
-        .loading {
-            text-align: center;
-            padding: 10px;
-            color: #007bff;
-        }
-        .error {
-            color: red;
-            padding: 10px;
-        }
+        body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; color:#333; }
+        header { background:#007bff; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; }
+        .auth-buttons button { margin-left:10px; padding:8px 16px; border:none; border-radius:4px; cursor:pointer; }
+        .hero { text-align:center; padding:50px 20px; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+        #tracking-form, #pricing { margin:20px auto; max-width:400px; padding:20px; background:white; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+        input, button, select { display:block; width:100%; margin:10px 0; padding:12px; box-sizing:border-box; border-radius:6px; }
+        button { background:#007bff; color:white; border:none; cursor:pointer; transition:background 0.3s; }
+        button:hover { background:#0056b3; }
+        #pricing-result { margin-top:15px; padding:15px; background:#f0f0f0; border-radius:5px; }
+        #why-choose-us { padding:40px 20px; background:white; margin:20px auto; max-width:800px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+        #tracking-result { margin:20px auto; max-width:400px; padding:20px; background:white; border-radius:8px; display:none; }
+        .loading { text-align:center; padding:10px; color:#007bff; }
+        .error { color:red; padding:10px; }
     </style>
 </head>
 <body>
@@ -109,8 +38,8 @@
             <input type="text" id="tracking-number" placeholder="Enter Tracking Number" required>
             <button type="submit">Track</button>
         </form>
-        <div id="tracking-loading" class="loading" style="display: none;">Tracking...</div>
-        <div id="tracking-error" class="error" style="display: none;"></div>
+        <div id="tracking-loading" class="loading" style="display:none;">Tracking...</div>
+        <div id="tracking-error" class="error" style="display:none;"></div>
         <div id="tracking-result">
             <h3>Shipment Details (Live Updates)</h3>
             <p id="status"></p>
@@ -197,7 +126,6 @@
                 <option value="USA">USA</option>
                 <option value="UK">UK</option>
                 <option value="Germany">Germany</option>
-                <!-- Add more countries as needed -->
             </select>
             <button id="create-account-btn">Create Account</button>
             <button onclick="document.getElementById('signup-modal').style.display='none'">Cancel</button>
@@ -215,7 +143,7 @@
         </div>
     </div>
 
-    <!-- Logged-in Dashboard (hidden until login) -->
+    <!-- Logged-in Dashboard -->
     <div id="user-dashboard" style="display:none;margin:20px auto;max-width:800px;padding:20px;background:white;border-radius:8px;box-shadow:0 0 10px rgba(0,0,0,0.1);">
         <h2>Welcome, <span id="user-name"></span></h2>
         <button onclick="createShipment()">Create Shipment / Label</button>
@@ -228,7 +156,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
@@ -243,7 +170,48 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const analytics = getAnalytics(app);
+
+        // === TRACKING - FIXED ===
+        document.getElementById('tracking-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const trackingNumber = document.getElementById('tracking-number').value.trim();
+            const resultDiv = document.getElementById('tracking-result');
+            const statusP = document.getElementById('status');
+            const historyUl = document.getElementById('location-history');
+            const loading = document.getElementById('tracking-loading');
+            const errorDiv = document.getElementById('tracking-error');
+
+            if (!trackingNumber) {
+                alert('Enter a tracking number');
+                return;
+            }
+
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+            resultDiv.style.display = 'block';
+            statusP.textContent = 'Loading...';
+            historyUl.innerHTML = '';
+
+            const unsub = onSnapshot(doc(db, 'shipments', trackingNumber), (docSnap) => {
+                if (docSnap.exists()) {
+                    const shipment = docSnap.data();
+                    statusP.textContent = `Status: ${shipment.status || 'Unknown'}`;
+                    historyUl.innerHTML = '';
+                    (shipment.locationHistory || []).forEach(loc => {
+                        const li = document.createElement('li');
+                        li.textContent = loc;
+                        historyUl.appendChild(li);
+                    });
+                } else {
+                    statusP.textContent = 'Tracking number not found.';
+                }
+                loading.style.display = 'none';
+            }, (error) => {
+                errorDiv.textContent = 'Error: ' + (error.message || 'Failed to load');
+                errorDiv.style.display = 'block';
+                loading.style.display = 'none';
+            });
+        });
 
         // Pricing calculator
         document.getElementById('calculate-pricing').addEventListener('click', () => {
@@ -268,14 +236,9 @@
             `;
         });
 
-        // Auth modals
-        document.getElementById('signup-btn').addEventListener('click', () => {
-            document.getElementById('signup-modal').style.display = 'flex';
-        });
-
-        document.getElementById('login-btn').addEventListener('click', () => {
-            document.getElementById('login-modal').style.display = 'flex';
-        });
+        // Auth modals and dashboard (kept from your code)
+        document.getElementById('signup-btn').addEventListener('click', () => document.getElementById('signup-modal').style.display = 'flex');
+        document.getElementById('login-btn').addEventListener('click', () => document.getElementById('login-modal').style.display = 'flex');
 
         document.getElementById('create-account-btn').addEventListener('click', async () => {
             const email = document.getElementById('signup-email').value;
@@ -288,9 +251,7 @@
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    firstName, lastName, country, email
-                });
+                await setDoc(doc(db, 'users', userCredential.user.uid), { firstName, lastName, country, email });
                 alert('Account created successfully!');
                 document.getElementById('signup-modal').style.display = 'none';
             } catch (error) {
@@ -313,18 +274,14 @@
             signOut(auth);
         }
 
-        // Show dashboard when logged in
         onAuthStateChanged(auth, async (user) => {
             const dashboard = document.getElementById('user-dashboard');
             if (user) {
                 document.getElementById('signup-btn').style.display = 'none';
                 document.getElementById('login-btn').style.display = 'none';
                 dashboard.style.display = 'block';
-                // Fetch user name
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
-                if (userDoc.exists()) {
-                    document.getElementById('user-name').textContent = userDoc.data().firstName;
-                }
+                if (userDoc.exists()) document.getElementById('user-name').textContent = userDoc.data().firstName;
             } else {
                 document.getElementById('signup-btn').style.display = 'inline-block';
                 document.getElementById('login-btn').style.display = 'inline-block';
@@ -332,14 +289,12 @@
             }
         });
 
-        // Create shipment (simple placeholder)
-        window.createShipment = () => alert('Create Shipment form would open here (you can expand this later)');
+        // Dashboard placeholders
+        window.createShipment = () => alert('Create Shipment form would open here');
+        window.manageShipments = () => alert('Manage My Shipments would load here');
+        window.checkoutPayment = () => alert('Checkout / Payment would open here');
 
-        window.manageShipments = () => alert('My Shipments management would load here');
-
-        window.checkoutPayment = () => alert('Payment/checkout flow would open here');
-
-        // Contact form (fixed)
+        // Contact form
         document.getElementById('contact-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const name = document.getElementById('name').value;
