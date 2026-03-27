@@ -205,7 +205,7 @@
 
         let currentUser = null;
 
-        // Button listeners for modals
+        // Open modals
         document.getElementById('signup-btn').addEventListener('click', () => document.getElementById('signup-modal').style.display = 'flex');
         document.getElementById('login-btn').addEventListener('click', () => document.getElementById('login-modal').style.display = 'flex');
 
@@ -213,7 +213,7 @@
         document.getElementById('create-account-btn').addEventListener('click', async () => {
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
-            if (!email || password.length < 8) return alert("Email and password (min 8 chars) are required");
+            if (!email || password.length < 8) return alert("Email and password (min 8 chars) required");
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await setDoc(doc(db, 'users', userCredential.user.uid), { email, createdAt: new Date().toISOString() });
@@ -236,26 +236,41 @@
             }
         });
 
-        // Auth state management
+        // Auth state
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
+            const publicContent = document.getElementById('public-content');
+            const dashboard = document.getElementById('user-dashboard');
+            const signupBtn = document.getElementById('signup-btn');
+            const loginBtn = document.getElementById('login-btn');
+
             if (user) {
-                document.getElementById('public-content').style.display = 'none';
-                document.getElementById('user-dashboard').style.display = 'block';
-                document.getElementById('signup-btn').style.display = 'none';
-                document.getElementById('login-btn').style.display = 'none';
+                publicContent.style.display = 'none';
+                dashboard.style.display = 'block';
+                signupBtn.style.display = 'none';
+                loginBtn.style.display = 'none';
                 document.getElementById('user-name').textContent = user.email.split('@')[0];
                 loadNotifications();
             } else {
+                publicContent.style.display = 'block';
+                dashboard.style.display = 'none';
+                signupBtn.style.display = 'inline-block';
+                loginBtn.style.display = 'inline-block';
+            }
+        });
+
+        // Logout - FIXED with full UI reset
+        function logoutUser() {
+            signOut(auth).then(() => {
+                alert("Logged out successfully");
+                // Force UI reset
                 document.getElementById('public-content').style.display = 'block';
                 document.getElementById('user-dashboard').style.display = 'none';
                 document.getElementById('signup-btn').style.display = 'inline-block';
                 document.getElementById('login-btn').style.display = 'inline-block';
-            }
-        });
-
-        function logoutUser() {
-            signOut(auth);
+            }).catch((error) => {
+                alert("Logout error: " + error.message);
+            });
         }
 
         // Create Shipment
@@ -286,18 +301,18 @@
                     status: 'Pending',
                     locationHistory: [`Created at ${new Date().toLocaleString()}`]
                 });
-                alert(`Shipment created!\nTracking Number: ${trackingNumber}`);
+                alert(`Shipment created!\nTracking: ${trackingNumber}`);
                 document.getElementById('create-shipment-modal').style.display = 'none';
             } catch (error) {
-                alert("Error creating shipment: " + error.message);
+                alert("Error: " + error.message);
             }
         };
 
-        // Manage My Shipments
+        // Manage Shipments
         window.manageShipments = () => {
             const modal = document.getElementById('manage-modal');
             const list = document.getElementById('my-shipments-list');
-            list.innerHTML = '<p>Loading your shipments...</p>';
+            list.innerHTML = '<p>Loading...</p>';
             modal.style.display = 'flex';
 
             onSnapshot(collection(db, 'shipments'), (snapshot) => {
@@ -313,7 +328,7 @@
                         list.appendChild(div);
                     }
                 });
-                if (!hasAny) list.innerHTML = '<p>No shipments yet. Create one above.</p>';
+                if (!hasAny) list.innerHTML = '<p>No shipments yet.</p>';
             });
         };
 
@@ -323,7 +338,7 @@
         };
 
         window.processPayment = () => {
-            alert("✅ Payment successful! (This is a demo - no real charge)");
+            alert("✅ Payment successful! (Demo mode)");
             document.getElementById('payment-modal').style.display = 'none';
         };
 
@@ -351,7 +366,7 @@
         document.getElementById('tracking-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const num = document.getElementById('tracking-number').value.trim();
-            if (num) alert(`Tracking for ${num} - connected to Firebase`);
+            if (num) alert(`Tracking ${num} - connected to Firebase`);
         });
     </script>
 </body>
