@@ -20,7 +20,7 @@
         button { background:#007bff; color:white; border:none; cursor:pointer; transition:background 0.3s; }
         button:hover { background:#0056b3; }
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center; }
-        .modal-content { background:white; padding:25px; border-radius:12px; width:90%; max-width:460px; }
+        .modal-content { background:white; padding:25px; border-radius:12px; width:90%; max-width:460px; max-height:90vh; overflow-y:auto; }
         .dashboard-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:15px; margin-top:20px; }
         .dashboard-btn { background:#007bff; color:white; border:none; padding:20px; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; }
         .dashboard-btn:hover { background:#0056b3; transform:translateY(-4px); }
@@ -103,8 +103,7 @@
     <div id="user-dashboard" style="display:none; margin:30px auto; max-width:900px; padding:30px; background:white; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.1);">
         <h2>Welcome, <span id="user-name"></span></h2>
 
-        <!-- Notifications -->
-        <div id="notifications-section" style="margin-bottom:20px;">
+        <div id="notifications-section" style="margin-bottom:25px;">
             <h3>Shipment Notifications</h3>
             <div id="notifications-list"></div>
         </div>
@@ -129,6 +128,31 @@
             <input type="text" id="to-zip" placeholder="To ZIP Code" required>
             <button onclick="saveShipment()">Create Shipment</button>
             <button onclick="document.getElementById('create-shipment-modal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Manage Shipments Modal -->
+    <div id="manage-modal" class="modal">
+        <div class="modal-content">
+            <h2>My Shipments</h2>
+            <div id="my-shipments-list" style="min-height:150px;"></div>
+            <button onclick="document.getElementById('manage-modal').style.display='none'">Close</button>
+        </div>
+    </div>
+
+    <!-- Checkout Payment Modal -->
+    <div id="payment-modal" class="modal">
+        <div class="modal-content">
+            <h2>Checkout & Pay</h2>
+            <p><strong>Total: $45.50 USD</strong></p>
+            <input type="text" id="card-number" placeholder="4242 4242 4242 4242" maxlength="19">
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="expiry" placeholder="MM/YY" style="flex:1;">
+                <input type="text" id="cvv" placeholder="CVV" maxlength="4" style="flex:1;">
+            </div>
+            <button onclick="processPayment()">Pay Securely</button>
+            <button onclick="document.getElementById('payment-modal').style.display='none'">Cancel</button>
+            <small style="color:#28a745;">Demo - No real charge</small>
         </div>
     </div>
 
@@ -181,24 +205,18 @@
 
         let currentUser = null;
 
-        // Open Sign Up
+        // Button listeners for modals
         document.getElementById('signup-btn').addEventListener('click', () => document.getElementById('signup-modal').style.display = 'flex');
-
-        // Open Login
         document.getElementById('login-btn').addEventListener('click', () => document.getElementById('login-modal').style.display = 'flex');
 
         // Create Account
         document.getElementById('create-account-btn').addEventListener('click', async () => {
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
-            if (!email || password.length < 8) return alert("Please enter valid email and password (min 8 chars)");
-
+            if (!email || password.length < 8) return alert("Email and password (min 8 chars) are required");
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    email,
-                    createdAt: new Date().toISOString()
-                });
+                await setDoc(doc(db, 'users', userCredential.user.uid), { email, createdAt: new Date().toISOString() });
                 alert("Account created successfully!");
                 document.getElementById('signup-modal').style.display = 'none';
             } catch (error) {
@@ -218,7 +236,7 @@
             }
         });
 
-        // Auth state
+        // Auth state management
         onAuthStateChanged(auth, (user) => {
             currentUser = user;
             if (user) {
@@ -236,19 +254,17 @@
             }
         });
 
-        // Logout
         function logoutUser() {
             signOut(auth);
         }
 
-        // === Create Shipment ===
+        // Create Shipment
         window.createShipment = () => {
             document.getElementById('create-shipment-modal').style.display = 'flex';
         };
 
         window.saveShipment = async () => {
             if (!currentUser) return alert("Please login first");
-
             const itemName = document.getElementById('item-name').value.trim();
             const weight = parseFloat(document.getElementById('shipment-weight').value);
             const from = document.getElementById('from-address').value.trim();
@@ -258,7 +274,7 @@
 
             if (!itemName || !weight || !from || !to) return alert("Please fill all fields");
 
-            const trackingNumber = 'GS' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            const trackingNumber = 'GS' + Math.random().toString(36).substr(2,9).toUpperCase();
 
             try {
                 await setDoc(doc(db, 'shipments', trackingNumber), {
@@ -270,14 +286,48 @@
                     status: 'Pending',
                     locationHistory: [`Created at ${new Date().toLocaleString()}`]
                 });
-                alert(`Shipment created successfully!\nTracking Number: ${trackingNumber}`);
+                alert(`Shipment created!\nTracking Number: ${trackingNumber}`);
                 document.getElementById('create-shipment-modal').style.display = 'none';
             } catch (error) {
                 alert("Error creating shipment: " + error.message);
             }
         };
 
-        // === Notifications ===
+        // Manage My Shipments
+        window.manageShipments = () => {
+            const modal = document.getElementById('manage-modal');
+            const list = document.getElementById('my-shipments-list');
+            list.innerHTML = '<p>Loading your shipments...</p>';
+            modal.style.display = 'flex';
+
+            onSnapshot(collection(db, 'shipments'), (snapshot) => {
+                list.innerHTML = '';
+                let hasAny = false;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.userId === currentUser.uid) {
+                        hasAny = true;
+                        const div = document.createElement('div');
+                        div.className = 'notification';
+                        div.innerHTML = `<strong>${docSnap.id}</strong><br>${data.itemName || 'Shipment'} - ${data.status}`;
+                        list.appendChild(div);
+                    }
+                });
+                if (!hasAny) list.innerHTML = '<p>No shipments yet. Create one above.</p>';
+            });
+        };
+
+        // Checkout & Pay
+        window.checkoutPayment = () => {
+            document.getElementById('payment-modal').style.display = 'flex';
+        };
+
+        window.processPayment = () => {
+            alert("✅ Payment successful! (This is a demo - no real charge)");
+            document.getElementById('payment-modal').style.display = 'none';
+        };
+
+        // Notifications
         function loadNotifications() {
             const list = document.getElementById('notifications-list');
             onSnapshot(collection(db, 'shipments'), (snapshot) => {
@@ -297,15 +347,11 @@
             });
         }
 
-        // Simple placeholders for other buttons
-        window.manageShipments = () => alert("Manage My Shipments - coming in next update");
-        window.checkoutPayment = () => alert("Checkout & Payment - coming in next update");
-
         // Tracking
         document.getElementById('tracking-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const num = document.getElementById('tracking-number').value.trim();
-            if (num) alert(`Tracking ${num} - connected to Firebase`);
+            if (num) alert(`Tracking for ${num} - connected to Firebase`);
         });
     </script>
 </body>
