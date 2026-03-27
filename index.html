@@ -17,10 +17,14 @@
         @keyframes ripple { 0% { box-shadow:0 0 0 0 rgba(0,123,255,0.4); } 70% { box-shadow:0 0 0 20px rgba(0,123,255,0); } 100% { box-shadow:0 0 0 0 rgba(0,123,255,0); } }
         section { margin:20px auto; max-width:900px; padding:20px; background:white; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
         input, button, select { display:block; width:100%; margin:10px 0; padding:12px; box-sizing:border-box; border-radius:6px; }
-        button { background:#007bff; color:white; border:none; cursor:pointer; }
+        button { background:#007bff; color:white; border:none; cursor:pointer; transition:background 0.3s; }
         button:hover { background:#0056b3; }
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center; }
         .modal-content { background:white; padding:25px; border-radius:12px; width:90%; max-width:460px; }
+        .dashboard-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:15px; margin-top:20px; }
+        .dashboard-btn { background:#007bff; color:white; border:none; padding:20px; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; }
+        .dashboard-btn:hover { background:#0056b3; transform:translateY(-4px); }
+        .notification { padding:12px; margin:8px 0; border:1px solid #ddd; border-radius:8px; background:#f8f9fa; }
     </style>
 </head>
 <body>
@@ -49,7 +53,7 @@
                 <button type="submit">Track</button>
             </form>
             <div id="tracking-result" style="display:none; margin-top:15px; padding:15px; background:#f0f0f0; border-radius:8px;">
-                <h3>Shipment Details</h3>
+                <h3>Shipment Details (Live Updates)</h3>
                 <p id="status"></p>
                 <h4>Location History</h4>
                 <ul id="location-history"></ul>
@@ -98,11 +102,33 @@
     <!-- Dashboard -->
     <div id="user-dashboard" style="display:none; margin:30px auto; max-width:900px; padding:30px; background:white; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,0.1);">
         <h2>Welcome, <span id="user-name"></span></h2>
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:15px;">
-            <button onclick="createShipment()" style="padding:20px; background:#007bff; color:white; border:none; border-radius:12px;">Create Shipment</button>
-            <button onclick="manageShipments()" style="padding:20px; background:#007bff; color:white; border:none; border-radius:12px;">Manage Shipments</button>
-            <button onclick="checkoutPayment()" style="padding:20px; background:#007bff; color:white; border:none; border-radius:12px;">Checkout & Pay</button>
-            <button onclick="logoutUser()" style="padding:20px; background:#dc3545; color:white; border:none; border-radius:12px;">Logout</button>
+
+        <!-- Notifications -->
+        <div id="notifications-section" style="margin-bottom:20px;">
+            <h3>Shipment Notifications</h3>
+            <div id="notifications-list"></div>
+        </div>
+
+        <div class="dashboard-grid">
+            <button class="dashboard-btn" onclick="createShipment()">📦 Create Shipment</button>
+            <button class="dashboard-btn" onclick="manageShipments()">📋 Manage My Shipments</button>
+            <button class="dashboard-btn" onclick="checkoutPayment()">💳 Checkout & Pay</button>
+            <button class="dashboard-btn" onclick="logoutUser()" style="background:#dc3545;">🚪 Logout</button>
+        </div>
+    </div>
+
+    <!-- Create Shipment Modal -->
+    <div id="create-shipment-modal" class="modal">
+        <div class="modal-content">
+            <h2>Create New Shipment</h2>
+            <input type="text" id="item-name" placeholder="Item / Commodity Name" required>
+            <input type="number" id="shipment-weight" placeholder="Weight (kg)" min="0.1" step="0.1" required>
+            <input type="text" id="from-address" placeholder="From Address" required>
+            <input type="text" id="from-zip" placeholder="From ZIP Code" required>
+            <input type="text" id="to-address" placeholder="To Address" required>
+            <input type="text" id="to-zip" placeholder="To ZIP Code" required>
+            <button onclick="saveShipment()">Create Shipment</button>
+            <button onclick="document.getElementById('create-shipment-modal').style.display='none'">Cancel</button>
         </div>
     </div>
 
@@ -137,7 +163,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
@@ -153,36 +179,23 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        let currentUser = null;
+
         // Open Sign Up
-        document.getElementById('signup-btn').addEventListener('click', () => {
-            document.getElementById('signup-modal').style.display = 'flex';
-        });
+        document.getElementById('signup-btn').addEventListener('click', () => document.getElementById('signup-modal').style.display = 'flex');
 
         // Open Login
-        document.getElementById('login-btn').addEventListener('click', () => {
-            document.getElementById('login-modal').style.display = 'flex';
-        });
+        document.getElementById('login-btn').addEventListener('click', () => document.getElementById('login-modal').style.display = 'flex');
 
-        // Create Account - FIXED
+        // Create Account
         document.getElementById('create-account-btn').addEventListener('click', async () => {
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
-            const firstName = document.getElementById('first-name').value || "User";
-            const lastName = document.getElementById('last-name').value || "";
-
-            if (!email || !password) return alert("Email and password are required");
-            if (password.length < 8) return alert("Password must be at least 8 characters");
-
-            const btn = document.getElementById('create-account-btn');
-            const originalText = btn.textContent;
-            btn.textContent = "Creating...";
-            btn.disabled = true;
+            if (!email || password.length < 8) return alert("Please enter valid email and password (min 8 chars)");
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    firstName,
-                    lastName,
                     email,
                     createdAt: new Date().toISOString()
                 });
@@ -190,9 +203,6 @@
                 document.getElementById('signup-modal').style.display = 'none';
             } catch (error) {
                 alert("Sign up failed: " + error.message);
-            } finally {
-                btn.textContent = originalText;
-                btn.disabled = false;
             }
         });
 
@@ -210,12 +220,14 @@
 
         // Auth state
         onAuthStateChanged(auth, (user) => {
+            currentUser = user;
             if (user) {
                 document.getElementById('public-content').style.display = 'none';
                 document.getElementById('user-dashboard').style.display = 'block';
                 document.getElementById('signup-btn').style.display = 'none';
                 document.getElementById('login-btn').style.display = 'none';
                 document.getElementById('user-name').textContent = user.email.split('@')[0];
+                loadNotifications();
             } else {
                 document.getElementById('public-content').style.display = 'block';
                 document.getElementById('user-dashboard').style.display = 'none';
@@ -224,25 +236,76 @@
             }
         });
 
+        // Logout
         function logoutUser() {
             signOut(auth);
         }
 
-        // Simple placeholders
-        window.createShipment = () => alert("Create Shipment form coming soon");
-        window.manageShipments = () => alert("Manage Shipments coming soon");
-        window.checkoutPayment = () => alert("Checkout coming soon");
+        // === Create Shipment ===
+        window.createShipment = () => {
+            document.getElementById('create-shipment-modal').style.display = 'flex';
+        };
+
+        window.saveShipment = async () => {
+            if (!currentUser) return alert("Please login first");
+
+            const itemName = document.getElementById('item-name').value.trim();
+            const weight = parseFloat(document.getElementById('shipment-weight').value);
+            const from = document.getElementById('from-address').value.trim();
+            const fromZip = document.getElementById('from-zip').value.trim();
+            const to = document.getElementById('to-address').value.trim();
+            const toZip = document.getElementById('to-zip').value.trim();
+
+            if (!itemName || !weight || !from || !to) return alert("Please fill all fields");
+
+            const trackingNumber = 'GS' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+            try {
+                await setDoc(doc(db, 'shipments', trackingNumber), {
+                    userId: currentUser.uid,
+                    itemName,
+                    weight,
+                    from: `${from} ${fromZip}`,
+                    to: `${to} ${toZip}`,
+                    status: 'Pending',
+                    locationHistory: [`Created at ${new Date().toLocaleString()}`]
+                });
+                alert(`Shipment created successfully!\nTracking Number: ${trackingNumber}`);
+                document.getElementById('create-shipment-modal').style.display = 'none';
+            } catch (error) {
+                alert("Error creating shipment: " + error.message);
+            }
+        };
+
+        // === Notifications ===
+        function loadNotifications() {
+            const list = document.getElementById('notifications-list');
+            onSnapshot(collection(db, 'shipments'), (snapshot) => {
+                list.innerHTML = '';
+                let found = false;
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.userId === currentUser.uid) {
+                        found = true;
+                        const div = document.createElement('div');
+                        div.className = 'notification';
+                        div.innerHTML = `<strong>${docSnap.id}</strong> - ${data.itemName || 'Shipment'}<br>Status: ${data.status}`;
+                        list.appendChild(div);
+                    }
+                });
+                if (!found) list.innerHTML = '<p>No notifications yet.</p>';
+            });
+        }
+
+        // Simple placeholders for other buttons
+        window.manageShipments = () => alert("Manage My Shipments - coming in next update");
+        window.checkoutPayment = () => alert("Checkout & Payment - coming in next update");
 
         // Tracking
         document.getElementById('tracking-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            alert("Tracking feature is connected to Firebase");
-        });
-
-        // Contact
-        document.getElementById('contact-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert("Contact message sent");
+            const num = document.getElementById('tracking-number').value.trim();
+            if (num) alert(`Tracking ${num} - connected to Firebase`);
         });
     </script>
 </body>
