@@ -1,9 +1,11 @@
+I want to paste you the current admin code to check and make those modifications since I recoded it. 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com; frame-ancestors 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.emailjs.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com; frame-ancestors 'self';">
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <title>GlobalShip Admin Panel</title>
     <style>
@@ -73,7 +75,6 @@
     <div id="admin-panel">
         <h2>Admin Panel</h2>
         <button id="logout">Logout</button>
-
         <h3>Generate New Tracking Number</h3>
         <button id="generate-tracking">Generate</button>
         <p id="new-tracking"></p>
@@ -119,10 +120,9 @@
         const db = getFirestore(app);
         const analytics = getAnalytics(app);
 
-        // Login
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value.trim();
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             try {
                 await signInWithEmailAndPassword(auth, email, password);
@@ -134,14 +134,12 @@
             }
         });
 
-        // Logout
         document.getElementById('logout').addEventListener('click', async function() {
             await signOut(auth);
             document.getElementById('admin-panel').style.display = 'none';
             document.getElementById('login-form').style.display = 'block';
         });
 
-        // Generate tracking
         document.getElementById('generate-tracking').addEventListener('click', async function() {
             const loading = document.getElementById('generate-loading');
             const errorDiv = document.getElementById('generate-error');
@@ -163,7 +161,6 @@
             }
         });
 
-        // Update shipment
         document.getElementById('update-shipment').addEventListener('click', async function() {
             const loading = document.getElementById('update-loading');
             const errorDiv = document.getElementById('update-error');
@@ -199,7 +196,6 @@
             }
         });
 
-        // Real-time shipment list
         function loadShipments() {
             const list = document.getElementById('shipment-list');
             const loading = document.getElementById('list-loading');
