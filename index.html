@@ -8,44 +8,15 @@
     <title>GlobalShip Logistics - Home</title>
     <script src="https://cdn.emailjs.com/dist/email.min.js" integrity="sha512-7rAQqU+LkfqOx9F2YzOOg8ovWzGWjWUMxy+TlpIP/u7S5q7S0pwrWgaHAbPF0Jzh95TPykuKN3zNT02krrDbaA==" crossorigin="anonymous"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .auth-buttons button {
-            margin-left: 10px;
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .hero {
-            text-align: center;
-            padding: 60px 20px;
-            background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }
-        .hero img {
-            width: 280px;
-            height: auto;
-            margin: 15px;
-            border-radius: 8px;
+        body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; color:#333; }
+        header { background:#007bff; color:white; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+        .auth-buttons button { margin-left:10px; padding:8px 16px; border:none; border-radius:4px; cursor:pointer; }
+        .hero { text-align:center; padding:60px 20px; background:#fff; box-shadow:0 0 10px rgba(0,0,0,0.1); position:relative; overflow:hidden; }
+        .hero img { 
+            width: 280px; 
+            height: auto; 
+            margin: 15px; 
+            border-radius: 8px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             animation: slideInLeft 1.2s ease-out forwards, ripple 2s ease-in-out infinite;
             opacity: 0;
@@ -59,87 +30,17 @@
             70% { box-shadow: 0 0 0 20px rgba(0,123,255,0); }
             100% { box-shadow: 0 0 0 0 rgba(0,123,255,0); }
         }
-        #tracking-form, #pricing {
-            margin: 20px auto;
-            max-width: 400px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        input, button, select {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 12px;
-            box-sizing: border-box;
-            border-radius: 6px;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        #pricing-result {
-            margin-top: 15px;
-            padding: 15px;
-            background: #f0f0f0;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        #why-choose-us {
-            padding: 40px 20px;
-            background: white;
-            margin: 20px auto;
-            max-width: 800px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        #tracking-result {
-            margin: 20px auto;
-            max-width: 400px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            display: none;
-        }
-        .loading { text-align: center; padding: 10px; color: #007bff; }
-        .error { color: red; padding: 10px; }
-        #user-dashboard {
-            margin: 30px auto;
-            max-width: 900px;
-            padding: 30px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            display: none;
-        }
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-        }
-        .dashboard-btn {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
-        }
-        .dashboard-btn:hover {
-            background: #0056b3;
-            transform: translateY(-4px);
-        }
+        #tracking-form, #pricing { margin:20px auto; max-width:400px; padding:20px; background:white; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+        input, button, select { display:block; width:100%; margin:10px 0; padding:12px; box-sizing:border-box; border-radius:6px; }
+        button { background:#007bff; color:white; border:none; cursor:pointer; transition:background 0.3s; }
+        button:hover { background:#0056b3; }
+        #pricing-result { margin-top:15px; padding:15px; background:#f0f0f0; border-radius:5px; }
+        #why-choose-us { padding:40px 20px; background:white; margin:20px auto; max-width:800px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+        #tracking-result { margin:20px auto; max-width:400px; padding:20px; background:white; border-radius:8px; display:none; }
+        .loading { text-align:center; padding:10px; color:#007bff; }
+        .error { color:red; padding:10px; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:25px; border-radius:12px; width:90%; max-width:420px; }
     </style>
 </head>
 <body>
@@ -151,11 +52,12 @@
         </div>
     </header>
 
-    <!-- Public content (visible before login) -->
+    <!-- Public Content -->
     <section id="public-content">
         <section class="hero">
             <h2>Welcome to GlobalShip</h2>
             <p>We deliver worldwide with trucks and planes.</p>
+            <!-- Truck and Cargo Plane with ripple + slide-in effect -->
             <img src="https://firstduemovers.com/wp-content/uploads/2023/01/DtC-image.jpg" alt="Delivery Truck being offloaded" style="animation-delay: 0.2s;">
             <img src="https://truckfirstclass.com/wp-content/uploads/2022/09/full-truckload-ftl.png" alt="Delivery Truck" style="animation-delay: 0.5s;">
             <img src="https://globalcorporatelogistics.com/wp-content/uploads/2024/08/Global-Corporate-Logistics-Airfreight-scaled.jpg" alt="Cargo Plane" style="animation-delay: 0.8s;">
@@ -167,8 +69,8 @@
                 <input type="text" id="tracking-number" placeholder="Enter Tracking Number" required>
                 <button type="submit">Track</button>
             </form>
-            <div id="tracking-loading" class="loading" style="display: none;">Tracking...</div>
-            <div id="tracking-error" class="error" style="display: none;"></div>
+            <div id="tracking-loading" class="loading" style="display:none;">Tracking...</div>
+            <div id="tracking-error" class="error" style="display:none;"></div>
             <div id="tracking-result">
                 <h3>Shipment Details (Live Updates)</h3>
                 <p id="status"></p>
@@ -249,16 +151,47 @@
         </div>
     </div>
 
+    <!-- Sign Up Modal -->
+    <div id="signup-modal" class="modal">
+        <div class="modal-content">
+            <h2>Sign Up</h2>
+            <input type="text" id="first-name" placeholder="First Name" required>
+            <input type="text" id="last-name" placeholder="Last Name" required>
+            <input type="email" id="signup-email" placeholder="Email" required>
+            <input type="password" id="signup-password" placeholder="Password (min 8 characters)" required>
+            <select id="country">
+                <option value="">Select Country</option>
+                <option value="Ghana">Ghana</option>
+                <option value="USA">USA</option>
+                <option value="UK">UK</option>
+                <option value="Germany">Germany</option>
+            </select>
+            <button id="create-account-btn">Create Account</button>
+            <button onclick="document.getElementById('signup-modal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Login Modal with Password Reset -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Login</h2>
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button id="login-account-btn">Login</button>
+            <button onclick="document.getElementById('login-modal').style.display='none'">Cancel</button>
+            <p style="margin-top:15px; text-align:center;">
+                <a href="#" onclick="resetPassword(); return false;" style="color:#007bff; text-decoration:underline;">Forgot Password?</a>
+            </p>
+        </div>
+    </div>
+
     <footer>
         <p>&copy; 2026 GlobalShip Logistics</p>
     </footer>
 
-    <!-- Sign Up & Login Modals (kept from your code) -->
-    <!-- ... paste your existing signup-modal and login-modal here if you want them ... -->
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -275,7 +208,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Real-time Tracking (fixed)
+        // Tracking
         document.getElementById('tracking-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const trackingNumber = document.getElementById('tracking-number').value.trim();
@@ -314,24 +247,76 @@
             });
         });
 
-        // Pricing calculator (clean - only shows cost in USD)
+        // Pricing (clean - only shows cost)
         document.getElementById('calculate-pricing').addEventListener('click', () => {
             const weight = parseFloat(document.getElementById('weight').value);
             const distance = parseFloat(document.getElementById('distance').value);
+            const currency = document.getElementById('currency').value;
 
             if (isNaN(weight) || isNaN(distance) || weight <= 0 || distance <= 0) {
                 alert('Please enter valid weight and distance.');
                 return;
             }
 
-            const costUSD = (weight * 0.5) + (distance * 0.1).toFixed(2);
+            const costUSD = (weight * 0.5) + (distance * 0.1);
+            const rates = { USD: 1, EUR: 0.85, GHS: 12 };
+            const cost = (costUSD * rates[currency]).toFixed(2);
 
             document.getElementById('pricing-result').innerHTML = `
-                <p><strong>Estimated Cost:</strong> $${costUSD} USD</p>
+                <p><strong>Estimated Cost:</strong> ${cost} ${currency}</p>
             `;
         });
 
-        // Auth state - hide public content after login
+        // Open modals
+        document.getElementById('signup-btn').addEventListener('click', () => document.getElementById('signup-modal').style.display = 'flex');
+        document.getElementById('login-btn').addEventListener('click', () => document.getElementById('login-modal').style.display = 'flex');
+
+        // Create Account
+        document.getElementById('create-account-btn').addEventListener('click', async () => {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const firstName = document.getElementById('first-name').value;
+            const lastName = document.getElementById('last-name').value;
+            const country = document.getElementById('country').value;
+
+            if (password.length < 8) return alert('Password must be at least 8 characters');
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, 'users', userCredential.user.uid), { firstName, lastName, country, email });
+                alert('Account created successfully!');
+                document.getElementById('signup-modal').style.display = 'none';
+            } catch (error) {
+                alert('Sign up failed: ' + error.message);
+            }
+        });
+
+        // Login
+        document.getElementById('login-account-btn').addEventListener('click', async () => {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                document.getElementById('login-modal').style.display = 'none';
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
+        });
+
+        // Password Reset
+        window.resetPassword = async () => {
+            const email = document.getElementById('login-email').value;
+            if (!email) return alert('Please enter your email address first');
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert('Password reset email sent! Check your inbox.');
+            } catch (error) {
+                alert('Error sending reset email: ' + error.message);
+            }
+        };
+
+        // Show dashboard after login
         onAuthStateChanged(auth, (user) => {
             const publicContent = document.getElementById('public-content');
             const dashboard = document.getElementById('user-dashboard');
@@ -345,11 +330,14 @@
             }
         });
 
-        // Dashboard buttons
-        window.createShipment = () => alert('Create Shipment form opens here');
-        window.manageShipments = () => alert('Manage My Shipments opens here');
-        window.checkoutPayment = () => alert('Checkout & Payment opens here');
-        window.logoutUser = () => signOut(auth);
+        function logoutUser() {
+            signOut(auth);
+        }
+
+        // Dashboard placeholders
+        window.createShipment = () => alert('Create Shipment form would open here');
+        window.manageShipments = () => alert('Manage My Shipments would load here');
+        window.checkoutPayment = () => alert('Checkout & Payment would open here');
 
         // Contact form
         document.getElementById('contact-form').addEventListener('submit', function(e) {
