@@ -3,126 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdn.emailjs.com 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*; connect-src 'self' https://firestore.googleapis.com https://securetoken.googleapis.com https://identitytoolkit.googleapis.com; frame-ancestors 'self';">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     <title>GlobalShip Admin Panel</title>
     <style>
-        :root {
-            --primary-purple: #4D148C;
-            --success-green: #28a745;
-            --warning-yellow: #ffc107;
-            --info-blue: #17a2b8;
-            --light-gray: #f8f9fa;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
         }
-
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f0f2f5; color: #333; }
-        
-        header { background: var(--primary-purple); color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-
-        .container { max-width: 1100px; margin: 20px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 15px rgba(0,0,0,0.1); }
-
-        /* --- TABLE STYLING --- */
-        .table-container { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: var(--light-gray); text-align: left; padding: 12px; border-bottom: 2px solid #dee2e6; color: var(--primary-purple); }
-        td { padding: 12px; border-bottom: 1px solid #eee; vertical-align: middle; }
-        
-        /* --- STATUS BADGES --- */
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; }
-        .status-pending { background: #fff3cd; color: #856404; }
-        .status-transit { background: #d1ecf1; color: #0c5460; }
-        .status-delivered { background: #d4edda; color: #155724; }
-
-        /* --- FORM STYLING --- */
-        .admin-controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; padding: 15px; border: 1px solid #eee; border-radius: 8px; }
-        input, select, button { padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: var(--primary-purple); color: white; cursor: pointer; font-weight: 600; transition: 0.3s; }
-        button:hover { opacity: 0.9; }
-        .btn-logout { background: transparent; border: 1px solid white; color: white; padding: 5px 15px; }
-
-        #login-form { max-width: 400px; margin: 100px auto; padding: 30px; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        #login-form {
+            max-width: 300px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #admin-panel {
+            display: none;
+            padding: 20px;
+        }
+        input, button, select {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #shipment-list {
+            margin-top: 20px;
+        }
+        .shipment {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 10px;
+            color: #007bff;
+        }
+        .error {
+            color: red;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
     <form id="login-form">
-        <h2 style="color: var(--primary-purple); text-align: center;">Admin Login</h2>
-        <input type="email" id="email" placeholder="Admin Email" required style="width: 100%; margin-bottom: 10px;">
-        <input type="password" id="password" placeholder="Password" required style="width: 100%; margin-bottom: 20px;">
-        <button type="submit" style="width: 100%;">ACCESS DASHBOARD</button>
+        <h2>Admin Login</h2>
+        <input type="email" id="email" placeholder="Admin Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <button type="submit">Login</button>
     </form>
 
-    <div id="admin-panel" style="display: none;">
-        <header>
-            <strong>GlobalShip Logistics Admin</strong>
-            <button id="logout" class="btn-logout">Logout</button>
-        </header>
+    <div id="admin-panel">
+        <h2>Admin Panel</h2>
+        <button id="logout">Logout</button>
+        <h3>Generate New Tracking Number</h3>
+        <button id="generate-tracking">Generate</button>
+        <p id="new-tracking"></p>
+        <div id="generate-loading" class="loading" style="display: none;">Generating...</div>
+        <div id="generate-error" class="error" style="display: none;"></div>
 
-        <div class="container">
-            <h3>Quick Actions</h3>
-            <div class="admin-controls">
-                <div>
-                    <small>Generate ID</small>
-                    <button id="generate-tracking" style="width: 100%;">+ NEW SHIPMENT</button>
-                </div>
-                <div>
-                    <small>Target Tracking #</small>
-                    <input type="text" id="update-tracking" placeholder="GSXXXXXX" style="width: 100%;">
-                </div>
-                <div>
-                    <small>Set Status</small>
-                    <select id="update-status" style="width: 100%;">
-                        <option value="Pending">Pending</option>
-                        <option value="In Transit">In Transit</option>
-                        <option value="Delivered">Delivered</option>
-                    </select>
-                </div>
-                <div>
-                    <small>Action</small>
-                    <button id="update-shipment" style="width: 100%; background: #28a745;">UPDATE STATUS</button>
-                </div>
-            </div>
+        <h3>Update Shipment</h3>
+        <input type="text" id="update-tracking" placeholder="Tracking Number">
+        <select id="update-status">
+            <option value="Pending">Pending</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+        </select>
+        <input type="text" id="add-location" placeholder="Add Location">
+        <button id="update-shipment">Update</button>
+        <div id="update-loading" class="loading" style="display: none;">Updating...</div>
+        <div id="update-error" class="error" style="display: none;"></div>
 
-            <h3>Live Shipments</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tracking Number</th>
-                            <th>Status</th>
-                            <th>Latest Location</th>
-                            <th>Created On</th>
-                        </tr>
-                    </thead>
-                    <tbody id="shipment-table-body">
-                        </tbody>
-                </table>
-            </div>
-            <div id="list-loading" style="text-align: center; padding: 20px;">Syncing with database...</div>
-        </div>
+        <h3>Shipment List (Live Updates)</h3>
+        <div id="shipment-list"></div>
+        <div id="list-loading" class="loading">Loading shipments...</div>
+        <div id="list-error" class="error" style="display: none;"></div>
     </div>
 
     <script type="module">
-        // --- KEEP YOUR EXISTING FIREBASE INITIALIZATION AND AUTH LOGIC ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-analytics.js";
 
-        // Update the loadShipments function to handle the table and badges
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgU4x-utGABcg48wJF4XcLKLyX7Yo6s64",
+            authDomain: "shipping-app-ac850.firebaseapp.com",
+            projectId: "shipping-app-ac850",
+            storageBucket: "shipping-app-ac850.firebasestorage.app",
+            messagingSenderId: "190336015131",
+            appId: "1:190336015131:web:e07c59b73b1119001bd1be",
+            measurementId: "G-7SHMLDZNR4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('admin-panel').style.display = 'block';
+                loadShipments();
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
+        });
+
+        document.getElementById('logout').addEventListener('click', async function() {
+            await signOut(auth);
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        });
+
+        document.getElementById('generate-tracking').addEventListener('click', async function() {
+            const loading = document.getElementById('generate-loading');
+            const errorDiv = document.getElementById('generate-error');
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            const trackingNumber = 'GS' + Math.random().toString(36).substr(2, 9).toUpperCase();
+            try {
+                await setDoc(doc(db, 'shipments', trackingNumber), {
+                    status: 'Pending',
+                    locationHistory: []
+                });
+                document.getElementById('new-tracking').textContent = `New Tracking: ${trackingNumber}`;
+            } catch (error) {
+                errorDiv.textContent = 'Error generating: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
+        document.getElementById('update-shipment').addEventListener('click', async function() {
+            const loading = document.getElementById('update-loading');
+            const errorDiv = document.getElementById('update-error');
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
+
+            const trackingNumber = document.getElementById('update-tracking').value.trim();
+            const status = document.getElementById('update-status').value;
+            const location = document.getElementById('add-location').value.trim();
+
+            if (!trackingNumber) return alert('Enter a tracking number');
+
+            try {
+                const docRef = doc(db, 'shipments', trackingNumber);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const currentData = docSnap.data();
+                    const newHistory = [...(currentData.locationHistory || [])];
+                    if (location) newHistory.push(location);
+                    await updateDoc(docRef, {
+                        status: status,
+                        locationHistory: newHistory
+                    });
+                    alert('Shipment updated.');
+                } else {
+                    alert('Tracking number not found.');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error updating: ' + error.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+
         function loadShipments() {
-            const tableBody = document.getElementById('shipment-table-body');
+            const list = document.getElementById('shipment-list');
             const loading = document.getElementById('list-loading');
+            const errorDiv = document.getElementById('list-error');
+            loading.style.display = 'block';
+            errorDiv.style.display = 'none';
 
             onSnapshot(collection(db, 'shipments'), (snapshot) => {
-                tableBody.innerHTML = '';
+                list.innerHTML = '';
                 snapshot.forEach((docSnap) => {
                     const s = docSnap.data();
-                    const statusClass = s.status === 'Pending' ? 'status-pending' : 
-                                      s.status === 'In Transit' ? 'status-transit' : 'status-delivered';
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td><strong>${docSnap.id}</strong></td>
-                        <td><span class="badge ${statusClass}">${s.status}</span></td>
-                        <td>${s.locationHistory && s.locationHistory.length > 0 ? s.locationHistory[s.locationHistory.length - 1] : 'N/A'}</td>
-                        <td><small>${new Date().toLocaleDateString()}</small></td>
-                    `;
-                    tableBody.appendChild(row);
+                    const div = document.createElement('div');
+                    div.classList.add('shipment');
+                    div.innerHTML = `<strong>${docSnap.id}</strong> - Status: ${s.status}<br>History: ${(s.locationHistory || []).join(', ')}`;
+                    list.appendChild(div);
                 });
+                loading.style.display = 'none';
+            }, (error) => {
+                errorDiv.textContent = 'Error loading shipments: ' + error.message;
+                errorDiv.style.display = 'block';
                 loading.style.display = 'none';
             });
         }
